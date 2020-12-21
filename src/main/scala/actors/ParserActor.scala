@@ -1,48 +1,60 @@
 package actors
 
-import actors.ParserActor.{Body, Find, Result}
-import akka.actor.Actor
+import actors.ParserActor._
+import akka.actor.{Actor, ActorRef}
 import org.jsoup.Jsoup
 
-import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
-class ParserActor extends Actor {
+class ParserActor(levelDBActor: ActorRef) extends Actor {
 
   private val minimumWordLength = 3
   // Todo: minimum text length ?
 
-  // Todo: move this to another actor
-  private val invertedIndex = new mutable.HashMap[String, List[String]]
+  override def receive: Receive = { case Body(link, html) =>
+    sender ! SchedulerActor.NewLinks(link, getLinks(html))
+    val text = getText(html)
+    levelDBActor ! LevelDBActor.Put(
+      words = getWords(text),
+      link = link,
+      text = text
+    )
 
-  override def receive: Receive = {
+  // Todo: remove
 
-    case Body(link, html) =>
-      sender() ! SchedulerActor.NewLinks(link, getLinks(html))
-      getWords(html).foreach(word =>
-        invertedIndex.put(word, link :: invertedIndex.getOrElse(word, List()))
-      )
-
-    case Find(words) =>
-      val links = words
-        .flatMap(invertedIndex.getOrElse(_, List()))
-        .groupBy(identity)
-        .view
-        .mapValues(_.size)
-        .toList
-        .sortBy(-_._2)
-
-      println(links) // Todo: remove
-      sender() ! Result(links)
+//    case Find(words) =>
+//      implicit val timeout: Timeout =
+//        Timeout(duration = FiniteDuration(5, SECONDS)) // Todo: magic number
+//      val future =
+//        (levelDBActor ? LevelDBActor.GetLinks(words = words)).mapTo[List[String]]
+//
+//      implicit val ec: ExecutionContext = context.dispatcher
+//      future
+//        .map(
+//          _.groupBy(identity).view
+//            .mapValues(_.size)
+//            .toList
+//            .sortBy(-_._2)
+//        )
+//        .onComplete {
+//          case Success(value) => sender ! Result(value)
+//          case Failure(exception) =>
+//            logger.error(s"Error getting links from database: ${exception.toString}")
+//        }
   }
 
-  private def getWords(html: String): List[String] = {
+  private def getText(html: String): String = {
 
-    // Todo: reduce to basic form: shoes -> shoe, ate -> eat
     Jsoup
       .parse(html)
       .body()
       .text()
+  }
+
+  private def getWords(text: String): List[String] = {
+
+    // Todo: reduce to basic form: shoes -> shoe, ate -> eat
+    text
       .split("[\\p{Punct}\\s]+") // Todo does not work with " and '
       .toList
       .filter(_.length >= minimumWordLength)
@@ -63,8 +75,5 @@ class ParserActor extends Actor {
 }
 
 object ParserActor {
-
   case class Body(link: String, html: String)
-  case class Find(words: List[String])
-  case class Result(links: List[(String, Int)]) // Todo: not in this class
 }

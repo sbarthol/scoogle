@@ -1,7 +1,7 @@
-import actors.{GetterActor, ParserActor, SchedulerActor}
-import akka.actor.{Actor, ActorSystem, Props}
+import actors.LevelDBActor.Shutdown
+import actors.{GetterActor, LevelDBActor, SchedulerActor}
+import akka.actor.{ActorSystem, Props}
 import client.NettyClient
-import org.slf4j.LoggerFactory
 
 object Main {
 
@@ -10,6 +10,16 @@ object Main {
     // Todo: use the request/response pattern of Akka
 
     val system = ActorSystem("WebCrawler")
+
+    val levelDBActor = system.actorOf(
+      props = Props(
+        new LevelDBActor(
+          invertedIndexFilepath = "target/a",
+          textFilepath = "target/b"
+        )
+      ),
+      name = "levelDB"
+    )
 
     val getterActor =
       system.actorOf(
@@ -31,31 +41,12 @@ object Main {
           new SchedulerActor(
             source = source,
             maxDepth = 1,
-            getterActor = getterActor,
-            parserActor = parserActor
+            levelDBActor = levelDBActor,
+            getterActor = getterActor
           )
         ),
         name = "scheduler"
       )
     })
-
-    system.actorOf(
-      Props(new Actor {
-
-        private val logger = LoggerFactory.getLogger("dummy")
-
-        while (true) {
-          Thread.sleep(1000 * 3)
-          logger.info(s"Sending the words")
-          parserActor ! ParserActor.Find(List("cia","nick","csi"))
-        }
-
-        override def receive: Receive = { case ParserActor.Result(links) =>
-
-          logger.info(s"The links are ${links}")
-        }
-      }),
-      name = "dummy"
-    )
   }
 }

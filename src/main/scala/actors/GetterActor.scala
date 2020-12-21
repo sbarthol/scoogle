@@ -17,7 +17,7 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
         queue.enqueue(link)
       } else {
         counter = counter + 1
-        request(link, sender())
+        request(link, sender)
       }
 
     case GetterActor.Done(link, body, scheduler) =>
