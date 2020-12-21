@@ -52,7 +52,6 @@ class SchedulerActor(
       logger.warn(s"Get request for link $link failed: ${error.toString}")
 
     case NewLinks(link, newLinks) =>
-
       newLinks.foreach(newLink => {
 
         val parentDistanceToSource = distanceToSource(link)

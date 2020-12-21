@@ -5,8 +5,7 @@ import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, Response}
 
 import scala.collection.mutable
 
-class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int)
-    extends Actor {
+class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extends Actor {
 
   private val queue = new mutable.Queue[String]
   private var counter = 0
