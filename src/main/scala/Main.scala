@@ -1,8 +1,12 @@
 import actors.{GetterActor, LevelDBActor, SchedulerActor}
 import akka.actor.{ActorSystem, Props}
 import client.NettyClient
+import org.slf4j.LoggerFactory
 
 object Main {
+
+  private class Main
+  private val logger = LoggerFactory.getLogger(classOf[Main])
 
   def main(args: Array[String]): Unit = {
 
@@ -34,17 +38,16 @@ object Main {
       system.actorOf(props = Props(new ParserActor), name = "parser")
     val seed = List()
 
-    seed.foreach(source => {
+    sources.foreach(source => {
       system.actorOf(
         props = Props(
           new SchedulerActor(
-            source = source,
-            maxDepth = 1,
+            source = source.link,
+            maxDepth = source.depth,
             levelDBActor = levelDBActor,
             getterActor = getterActor
           )
-        ),
-        name = "scheduler"
+        )
       )
     })
   }
