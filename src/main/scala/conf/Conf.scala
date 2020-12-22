@@ -1,3 +1,5 @@
+package conf
+
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {

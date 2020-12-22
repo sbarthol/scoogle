@@ -15,10 +15,6 @@ object SchedulerActor {
 
   private val urlValidator = new UrlValidator(Array("http", "https"))
 
-  // Todo: make thread safe
-  private val downloading = new mutable.HashSet[String]
-  private var downloaded = 0
-
   case class Done(link: String, body: String)
   case class Error(link: String, error: Throwable)
   case class NewLinks(link: String, newLinks: List[String])
@@ -35,7 +31,7 @@ class SchedulerActor(
   private val distanceToSource = new mutable.HashMap[String, Int]
 
   private val parserActor =
-    context.system.actorOf(
+    context.actorOf(
       props = Props(
         new ParserActor(levelDBActor = levelDBActor)
       )
@@ -45,7 +41,7 @@ class SchedulerActor(
     logger.warn(s"maxDepth $maxDepth is smaller than 0")
   } else if (!urlValidator.isValid(source)) {
     logger.warn(s"link $source not valid")
-  } else if (downloading.contains(source)) {
+  } else if (isDownloading(source)) {
     logger.warn(s"link $source is already being downloaded")
   } else if (isInDB(source)) {
     logger.warn(s"link $source is already in the database")
@@ -53,8 +49,7 @@ class SchedulerActor(
 
     logger.debug(s"Downloading new Link($source)")
     distanceToSource.put(source, 0)
-    downloading.add(source)
-
+    context.parent ! MasterActor.Put(source)
     getterActor ! GetterActor.Link(source)
   }
 
@@ -62,13 +57,12 @@ class SchedulerActor(
 
     case SchedulerActor.Done(link, body) =>
       logger.debug(s"Received Done($link)")
-      downloading.remove(link)
-      downloaded = downloaded + 1
-      logger.info(s"Downloading: ${downloading.size}\nDownloaded: $downloaded")
+      context.parent ! MasterActor.Remove(link)
+      context.parent ! MasterActor.Increment
       parserActor ! ParserActor.Body(link, body)
 
     case SchedulerActor.Error(link, error) =>
-      downloading.remove(link)
+      context.parent ! MasterActor.Remove(link)
       logger.warn(s"Get request for link $link failed: ${error.toString}")
 
     case NewLinks(link, newLinks) =>
@@ -80,7 +74,7 @@ class SchedulerActor(
 
         if (
           urlValidator.isValid(newLink)
-          && !downloading.contains(newLink)
+          && !isDownloading(newLink)
           && !isInDB(newLink)
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
@@ -91,13 +85,27 @@ class SchedulerActor(
           )
 
           logger.debug(s"Downloading new Link($newLink)")
-          downloading.add(newLink)
+          context.parent ! MasterActor.Put(newLink)
           getterActor ! GetterActor.Link(newLink)
         }
       })
+  }
 
-    case _: Boolean =>
-      logger.warn(s"Received a dead letter. Probably a from a isInDb that timed out")
+  private def isDownloading(link: String): Boolean = {
+
+    implicit val ec: ExecutionContext = context.dispatcher
+    val duration = FiniteDuration(5, SECONDS)
+    implicit val timeout: Timeout = Timeout(duration)
+    val future =
+      (context.parent ? MasterActor.Inside(link)).asInstanceOf[Future[Boolean]]
+
+    try {
+      Await.result(awaitable = future, atMost = duration)
+    } catch {
+      case e: Exception =>
+        logger.warn(s"isDownloading future failed: ${e.toString}")
+        false
+    }
   }
 
   private def isInDB(link: String): Boolean = {

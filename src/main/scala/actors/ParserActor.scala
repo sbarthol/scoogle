@@ -23,7 +23,7 @@ class ParserActor(levelDBActor: ActorRef) extends Actor {
 
 //    case Find(words) =>
 //      implicit val timeout: Timeout =
-//        Timeout(duration = FiniteDuration(5, SECONDS)) // Todo: magic number
+//        Timeout(duration = FiniteDuration(5, SECONDS))
 //      val future =
 //        (levelDBActor ? LevelDBActor.GetLinks(words = words)).mapTo[List[String]]
 //

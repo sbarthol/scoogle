@@ -25,7 +25,7 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
     logger.debug("Database was shut down")
   }
 
-  private val putActor = context.system.actorOf(
+  private val putActor = context.actorOf(
     props = Props(new PutActor(invertedIndexDb = invertedIndexDb, textDb = textDb)),
     name = "levelDB.put"
   )
