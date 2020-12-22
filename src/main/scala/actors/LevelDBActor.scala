@@ -23,7 +23,7 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
   sys.addShutdownHook {
     invertedIndexDb.close()
     textDb.close()
-    logger.debug("Both databases were shut down")
+    logger.debug("Database was shut down")
   }
 
   override def receive: Receive = {
@@ -38,7 +38,7 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
         invertedIndexDb.put(word, link :: links)
 
       })
-      logger.debug(s"Link $link put in both databases")
+      logger.debug(s"Link $link put in database")
 
     case Inside(link: String) =>
 

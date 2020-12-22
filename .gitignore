@@ -1,3 +1,4 @@
 .idea
 .scalafmt.conf
 target
+.DS_Store
