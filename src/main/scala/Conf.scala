@@ -24,8 +24,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val databaseDirectory: ScallopOption[String] = opt[String](
     name = "databaseDirectory",
     noshort = true,
-    descr =
-      "The directory in which to put the database files. Defaults to ./target.",
+    descr = "The directory in which to put the database files. Defaults to ./target.",
     default = Some("target"),
     validate = _.length >= 1,
     argName = "dir"

@@ -41,7 +41,9 @@ class SchedulerActor(
       )
     )
 
-  if (!urlValidator.isValid(source)) {
+  if (maxDepth < 0) {
+    logger.warn(s"maxDepth $maxDepth is smaller than 0")
+  } else if (!urlValidator.isValid(source)) {
     logger.warn(s"link $source not valid")
   } else if (downloading.contains(source)) {
     logger.warn(s"link $source is already being downloaded")
