@@ -6,15 +6,14 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    // Todo: use the request/response pattern of Akka
-
+    val conf = new Conf(args)
     val system = ActorSystem("WebCrawler")
 
     val levelDBActor = system.actorOf(
       props = Props(
         new LevelDBActor(
-          invertedIndexFilepath = "target/a",
-          textFilepath = "target/b"
+          invertedIndexFilepath = conf.databaseDirectory.apply() + "/invertedIndexDb",
+          textFilepath = conf.databaseDirectory.apply() + "/textDb"
         )
       ),
       name = "levelDB"
@@ -25,11 +24,12 @@ object Main {
         props = Props(
           new GetterActor(
             client = NettyClient.client,
-            maxConcurrentConnections = 40
+            maxConcurrentConnections = conf.maxConcurrentSockets.apply()
           )
         ),
         name = "getter"
       )
+
     val parserActor =
       system.actorOf(props = Props(new ParserActor), name = "parser")
     val seed = List()

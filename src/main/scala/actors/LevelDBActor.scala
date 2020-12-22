@@ -27,7 +27,7 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
 
   private val putActor = context.system.actorOf(
     props = Props(new PutActor(invertedIndexDb = invertedIndexDb, textDb = textDb)),
-    name = "levelDB.put1"
+    name = "levelDB.put"
   )
 
   override def receive: Receive = {

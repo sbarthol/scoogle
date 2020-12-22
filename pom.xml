@@ -34,6 +34,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.13</artifactId>
+            <version>3.7.0-M7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.rogach</groupId>
+            <artifactId>scallop_2.13</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.ning</groupId>
             <artifactId>async-http-client</artifactId>
             <version>1.9.40</version>
