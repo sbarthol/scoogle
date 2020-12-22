@@ -9,7 +9,6 @@ import scala.jdk.CollectionConverters._
 class ParserActor(levelDBActor: ActorRef) extends Actor {
 
   private val minimumWordLength = 3
-  // Todo: minimum text length ?
 
   override def receive: Receive = { case Body(link, html) =>
     sender ! SchedulerActor.NewLinks(link, getLinks(html))

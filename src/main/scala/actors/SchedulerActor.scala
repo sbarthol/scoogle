@@ -101,7 +101,7 @@ class SchedulerActor(
   private def isInDB(link: String): Boolean = {
 
     implicit val ec: ExecutionContext = context.dispatcher
-    val duration = FiniteDuration(5, SECONDS) // Todo: magic number
+    val duration = FiniteDuration(5, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
       (levelDBActor ? LevelDBActor.Inside(link)).asInstanceOf[Future[Boolean]]

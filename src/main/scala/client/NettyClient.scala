@@ -9,7 +9,8 @@ object NettyClient {
   lazy val client = new AsyncHttpClient(
     new AsyncHttpClientConfig.Builder()
       .setFollowRedirect(true)
-      .setExecutorService(Executors.newCachedThreadPool()) // Todo: Try to use the same executor as the akka dispatcher
+      // Todo: Try to use the same executor as the akka dispatcher
+      .setExecutorService(Executors.newCachedThreadPool())
       .build()
   )
 }
