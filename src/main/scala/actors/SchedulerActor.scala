@@ -1,6 +1,6 @@
 package actors
 
-import actors.SchedulerActor.{NewLinks, downloading, urlValidator}
+import actors.SchedulerActor._
 import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -14,7 +14,10 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 object SchedulerActor {
 
   private val urlValidator = new UrlValidator(Array("http", "https"))
-  private val downloading = new mutable.HashSet[String] // Todo: make thread safe
+
+  // Todo: make thread safe
+  private val downloading = new mutable.HashSet[String]
+  private var downloaded = 0
 
   case class Done(link: String, body: String)
   case class Error(link: String, error: Throwable)
@@ -56,18 +59,17 @@ class SchedulerActor(
   override def receive: Receive = {
 
     case SchedulerActor.Done(link, body) =>
-
       logger.debug(s"Received Done($link)")
       downloading.remove(link)
+      downloaded = downloaded + 1
+      logger.info(s"Downloading: ${downloading.size}\nDownloaded: $downloaded")
       parserActor ! ParserActor.Body(link, body)
 
     case SchedulerActor.Error(link, error) =>
-
       downloading.remove(link)
       logger.warn(s"Get request for link $link failed: ${error.toString}")
 
     case NewLinks(link, newLinks) =>
-
       newLinks.foreach(newLink => {
 
         val parentDistanceToSource = distanceToSource(link)
@@ -107,8 +109,9 @@ class SchedulerActor(
     try {
       Await.result(awaitable = future, atMost = duration)
     } catch {
-      case e: Exception => logger.warn(s"isInDb future failed: ${e.toString}")
-      false
+      case e: Exception =>
+        logger.warn(s"isInDb future failed: ${e.toString}")
+        false
     }
   }
 }

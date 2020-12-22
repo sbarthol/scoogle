@@ -1,4 +1,3 @@
-import actors.LevelDBActor.Shutdown
 import actors.{GetterActor, LevelDBActor, SchedulerActor}
 import akka.actor.{ActorSystem, Props}
 import client.NettyClient
