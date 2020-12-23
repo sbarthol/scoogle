@@ -14,10 +14,11 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
   private val logger = LoggerFactory.getLogger(classOf[LevelDBActor])
 
   private val options = new Options
+  options.createIfMissing(true)
+
   private val invertedIndexDb =
     factory.open(new File(invertedIndexFilepath), options)
   private val textDb = factory.open(new File(textFilepath), options)
-  options.createIfMissing(true)
 
   sys.addShutdownHook {
     invertedIndexDb.close()

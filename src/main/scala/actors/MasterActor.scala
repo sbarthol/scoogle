@@ -1,6 +1,6 @@
 package actors
 
-import actors.MasterActor.{Increment, Inside, Put, Remove}
+import actors.MasterActor._
 import akka.actor.{Actor, Props}
 import client.NettyClient
 import org.slf4j.LoggerFactory
@@ -34,6 +34,14 @@ class MasterActor(
       ),
       name = "getter"
     )
+
+  context.actorOf(
+      props = Props(
+        new MonitorActor
+      ),
+      name = "monitor"
+    )
+
   private val logger = LoggerFactory.getLogger(classOf[MasterActor])
 
   sources.foreach(source => {
@@ -52,6 +60,12 @@ class MasterActor(
   logger.debug(s"Started webcrawler for the following sources: $sources")
 
   override def receive: Receive = {
+
+    case Status =>
+      sender ! MonitorActor.Status(
+        downloading = downloading.size,
+        downloadsCompleted = downloaded
+      )
 
     case Inside(link) =>
       sender ! downloading.contains(link)
@@ -73,4 +87,5 @@ object MasterActor {
   case class Put(link: String)
   case class Remove(link: String)
   case object Increment
+  case object Status
 }
