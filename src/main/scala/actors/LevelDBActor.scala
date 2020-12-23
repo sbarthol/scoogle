@@ -12,7 +12,6 @@ import scala.language.implicitConversions
 class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends Actor {
 
   private val logger = LoggerFactory.getLogger(classOf[LevelDBActor])
-
   private val options = new Options
   options.createIfMissing(true)
 

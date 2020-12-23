@@ -11,7 +11,8 @@ import scala.collection.mutable
 class MasterActor(
     sources: List[Source],
     databaseDirectory: String,
-    maxConcurrentSockets: Int
+    maxConcurrentSockets: Int,
+    overridePresentLinks: Boolean
 ) extends Actor {
 
   private val downloading = new mutable.HashSet[String]
@@ -36,11 +37,11 @@ class MasterActor(
     )
 
   context.actorOf(
-      props = Props(
-        new MonitorActor
-      ),
-      name = "monitor"
-    )
+    props = Props(
+      new MonitorActor
+    ),
+    name = "monitor"
+  )
 
   private val logger = LoggerFactory.getLogger(classOf[MasterActor])
 
@@ -50,6 +51,7 @@ class MasterActor(
         new SchedulerActor(
           source = source.link,
           maxDepth = source.depth,
+          overridePresentLinks = overridePresentLinks,
           levelDBActor = levelDBActor,
           getterActor = getterActor
         )
