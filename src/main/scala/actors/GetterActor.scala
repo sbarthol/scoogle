@@ -7,14 +7,14 @@ import scala.collection.mutable
 
 class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extends Actor {
 
-  private val queue = new mutable.Queue[String]
+  private val queue = new mutable.Queue[(String, ActorRef)]
   private var counter = 0
 
   override def receive: Receive = {
 
     case GetterActor.Link(link) =>
       if (counter == maxConcurrentConnections) {
-        queue.enqueue(link)
+        queue.enqueue((link, sender))
       } else {
         counter = counter + 1
         request(link, sender)
@@ -23,16 +23,16 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
     case GetterActor.Done(link, body, scheduler) =>
       counter = counter - 1
       if (queue.nonEmpty) {
-        val front = queue.dequeue()
-        request(front, scheduler)
+        val (front, sender) = queue.dequeue()
+        request(front, sender)
       }
       scheduler ! SchedulerActor.Done(link, body)
 
     case GetterActor.Error(link, error, scheduler) =>
       counter = counter - 1
       if (queue.nonEmpty) {
-        val front = queue.dequeue()
-        request(front, scheduler)
+        val (front, sender) = queue.dequeue()
+        request(front, sender)
       }
       scheduler ! SchedulerActor.Error(link, error)
   }
