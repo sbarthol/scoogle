@@ -39,20 +39,38 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
       val inside = textDb.get(link) != null
       logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the database")
       sender ! inside
+
+    case GetLinks(words: List[String]) =>
+      val links = words.flatMap(word => {
+
+        val raw = invertedIndexDb.get(word)
+        val matchingLinks: List[String] = if (raw == null) List() else raw
+        matchingLinks match {
+          case null                => List()
+          case value: List[String] => value
+        }
+      })
+
+      sender ! links
   }
 
   private class PutActor(invertedIndexDb: DB, textDb: DB) extends Actor {
 
     override def receive: Receive = { case Put(words, link, text) =>
-      textDb.put(link, text)
-      words.foreach(word => {
 
-        val rawLinks = invertedIndexDb.get(word)
-        val links: List[String] = if (rawLinks == null) List() else rawLinks
-        invertedIndexDb.put(word, link :: links)
+      if (textDb.get(link) == null) {
+        textDb.put(link, text)
+        words.foreach(word => {
 
-      })
-      logger.debug(s"Link $link put in database")
+          val rawLinks = invertedIndexDb.get(word)
+          val links: List[String] = if (rawLinks == null) List() else rawLinks
+          invertedIndexDb.put(word, link :: links)
+
+        })
+        logger.debug(s"Link $link put in database")
+      } else {
+        logger.debug(s"Link $link already present in the database")
+      }
     }
   }
 
@@ -80,4 +98,5 @@ object LevelDBActor {
 
   case class Put(words: List[String], link: String, text: String)
   case class Inside(link: String)
+  case class GetLinks(words: List[String])
 }

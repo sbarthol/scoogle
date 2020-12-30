@@ -34,6 +34,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-stream_2.13</artifactId>
+            <version>2.6.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http_2.13</artifactId>
+            <version>10.2.2</version>
+        </dependency>
+        <dependency>
             <groupId>org.scala-lang.modules</groupId>
             <artifactId>scala-xml_2.13</artifactId>
             <version>2.0.0-M3</version>

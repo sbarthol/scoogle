@@ -11,35 +11,13 @@ class ParserActor(levelDBActor: ActorRef) extends Actor {
   private val minimumWordLength = 3
 
   override def receive: Receive = { case Body(link, html) =>
-    sender ! SchedulerActor.NewLinks(link, getLinks(html))
+    context.parent ! SchedulerActor.NewLinks(link, getLinks(html))
     val text = getText(html)
     levelDBActor ! LevelDBActor.Put(
       words = getWords(text),
       link = link,
       text = text
     )
-
-  // Todo: remove
-
-//    case Find(words) =>
-//      implicit val timeout: Timeout =
-//        Timeout(duration = FiniteDuration(5, SECONDS))
-//      val future =
-//        (levelDBActor ? LevelDBActor.GetLinks(words = words)).mapTo[List[String]]
-//
-//      implicit val ec: ExecutionContext = context.dispatcher
-//      future
-//        .map(
-//          _.groupBy(identity).view
-//            .mapValues(_.size)
-//            .toList
-//            .sortBy(-_._2)
-//        )
-//        .onComplete {
-//          case Success(value) => sender ! Result(value)
-//          case Failure(exception) =>
-//            logger.error(s"Error getting links from database: ${exception.toString}")
-//        }
   }
 
   private def getText(html: String): String = {

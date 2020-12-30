@@ -38,6 +38,8 @@ class SchedulerActor(
       )
     )
 
+  logger.debug(s"Attempt to start new scheduler actor for source: $source")
+
   if (maxDepth < 0) {
     logger.warn(s"maxDepth $maxDepth is smaller than 0")
   } else if (!urlValidator.isValid(source)) {
@@ -84,6 +86,7 @@ class SchedulerActor(
             key = newLink,
             value = parentDistanceToSource + 1
           )
+          distanceToSource.apply(newLink)
 
           logger.debug(s"Downloading new Link($newLink)")
           context.parent ! MasterActor.Put(newLink)

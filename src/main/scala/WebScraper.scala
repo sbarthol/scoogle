@@ -3,7 +3,7 @@ import akka.actor.{ActorSystem, Props}
 import conf.Conf
 import source.SourcesLoader
 
-object Main {
+object WebScraper {
 
   def main(args: Array[String]): Unit = {
 
