@@ -1,7 +1,9 @@
 package actors
 
 import actors.MasterActor._
-import akka.actor.{Actor, Props}
+import actors.SchedulerActor.{DownloadSourceException, InitializationException}
+import akka.actor.SupervisorStrategy.{Restart, Stop}
+import akka.actor.{Actor, OneForOneStrategy, Props}
 import client.NettyClient
 import org.slf4j.LoggerFactory
 import source.Source
@@ -14,6 +16,13 @@ class MasterActor(
     maxConcurrentSockets: Int,
     overridePresentLinks: Boolean
 ) extends Actor {
+
+  override val supervisorStrategy: OneForOneStrategy =
+    OneForOneStrategy(maxNrOfRetries = 3) {
+      case _: InitializationException => Stop
+      case _: DownloadSourceException => Restart
+      case _: Exception               => Stop
+    }
 
   private val downloading = new mutable.HashSet[String]
   private val levelDBActor = context.actorOf(

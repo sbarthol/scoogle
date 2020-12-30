@@ -18,6 +18,9 @@ object SchedulerActor {
   case class Done(link: String, body: String)
   case class Error(link: String, error: Throwable)
   case class NewLinks(link: String, newLinks: List[String])
+
+  class InitializationException(message: String) extends Exception(message)
+  class DownloadSourceException(message: String) extends Exception(message)
 }
 
 class SchedulerActor(
@@ -30,7 +33,6 @@ class SchedulerActor(
 
   private val logger = LoggerFactory.getLogger(classOf[SchedulerActor])
   private val distanceToSource = new mutable.HashMap[String, Int]
-
   private val parserActor =
     context.actorOf(
       props = Props(
@@ -41,13 +43,13 @@ class SchedulerActor(
   logger.debug(s"Attempt to start new scheduler actor for source: $source")
 
   if (maxDepth < 0) {
-    logger.warn(s"maxDepth $maxDepth is smaller than 0")
+    throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
   } else if (!urlValidator.isValid(source)) {
-    logger.warn(s"link $source not valid")
+    throw new InitializationException(s"link $source not valid")
   } else if (isDownloading(source)) {
-    logger.warn(s"link $source is already being downloaded")
+    throw new InitializationException(s"link $source is already being downloaded")
   } else if (!overridePresentLinks && isInDB(source)) {
-    logger.warn(s"link $source is already in the database")
+    throw new InitializationException(s"link $source is already in the database")
   } else {
 
     logger.debug(s"Downloading new Link($source)")
@@ -66,8 +68,13 @@ class SchedulerActor(
 
     case SchedulerActor.Error(link, error) =>
       context.parent ! MasterActor.Remove(link)
-      context.parent ! MasterActor.Error
-      logger.warn(s"Get request for link $link failed: ${error.toString}")
+      val errorDescription = s"Get request for link $link failed: ${error.toString}"
+      if (source == link) {
+        throw new DownloadSourceException(errorDescription)
+      } else {
+        context.parent ! MasterActor.Error
+        logger.warn(errorDescription)
+      }
 
     case NewLinks(link, newLinks) =>
       newLinks.foreach(newLink => {
