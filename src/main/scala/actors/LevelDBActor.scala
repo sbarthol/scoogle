@@ -7,6 +7,7 @@ import org.iq80.leveldb.{DB, Options}
 import org.slf4j.LoggerFactory
 
 import java.io._
+import scala.collection.mutable
 import scala.language.implicitConversions
 
 class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends Actor {
@@ -41,17 +42,18 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
       sender ! inside
 
     case GetLinks(words: List[String]) =>
-      val links = words.flatMap(word => {
+      val linkMap = mutable.HashMap[String, Int]()
+
+      words.foreach(word => {
 
         val raw = invertedIndexDb.get(word)
         val matchingLinks: List[String] = if (raw == null) List() else raw
-        matchingLinks match {
-          case null                => List()
-          case value: List[String] => value
-        }
+        matchingLinks.foreach(link =>
+          linkMap.put(key = link, value = linkMap.getOrElse(key = link, default = 0) + 1)
+        )
       })
 
-      sender ! links
+      sender ! linkMap.toList.sortBy(-_._2)
   }
 
   private class PutActor(invertedIndexDb: DB, textDb: DB) extends Actor {
