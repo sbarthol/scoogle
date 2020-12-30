@@ -21,18 +21,20 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
       }
 
     case GetterActor.Done(link, body, scheduler) =>
-      counter = counter - 1
       if (queue.nonEmpty) {
         val (front, sender) = queue.dequeue()
         request(front, sender)
+      } else {
+        counter = counter - 1
       }
       scheduler ! SchedulerActor.Done(link, body)
 
     case GetterActor.Error(link, error, scheduler) =>
-      counter = counter - 1
       if (queue.nonEmpty) {
         val (front, sender) = queue.dequeue()
         request(front, sender)
+      } else {
+        counter = counter - 1
       }
       scheduler ! SchedulerActor.Error(link, error)
   }
