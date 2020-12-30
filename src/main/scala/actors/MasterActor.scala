@@ -58,7 +58,10 @@ class MasterActor(
       )
     )
   })
-  private var downloaded = 0
+
+  private var completed = 0
+  private var failed = 0
+
   logger.debug(s"Started webcrawler for the following sources: $sources")
 
   override def receive: Receive = {
@@ -66,7 +69,8 @@ class MasterActor(
     case Status =>
       sender ! MonitorActor.Status(
         downloading = downloading.size,
-        downloadsCompleted = downloaded
+        completed = completed,
+        failed = failed
       )
 
     case Inside(link) =>
@@ -79,7 +83,10 @@ class MasterActor(
       downloading.remove(link)
 
     case Increment =>
-      downloaded = downloaded + 1
+      completed = completed + 1
+
+    case Error =>
+      failed = failed + 1
   }
 }
 
@@ -90,4 +97,5 @@ object MasterActor {
   case class Remove(link: String)
   case object Increment
   case object Status
+  case object Error
 }

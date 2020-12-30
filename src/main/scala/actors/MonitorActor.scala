@@ -20,12 +20,14 @@ class MonitorActor extends Actor {
     message = MasterActor.Status
   )
 
-  override def receive: Receive = { case Status(downloading, downloadsCompleted) =>
-    logger.info(s"\nDownloading: $downloading\nDownloads completed: $downloadsCompleted")
+  override def receive: Receive = { case Status(downloading, completed, failed) =>
+    logger.info(
+      s"\nDownloading: $downloading\nCompleted Downloads: $completed\nFailed Downloads: $failed"
+    )
   }
 }
 
 object MonitorActor {
 
-  case class Status(downloading: Int, downloadsCompleted: Int)
+  case class Status(downloading: Int, completed: Int, failed: Int)
 }

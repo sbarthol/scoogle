@@ -66,6 +66,7 @@ class SchedulerActor(
 
     case SchedulerActor.Error(link, error) =>
       context.parent ! MasterActor.Remove(link)
+      context.parent ! MasterActor.Error
       logger.warn(s"Get request for link $link failed: ${error.toString}")
 
     case NewLinks(link, newLinks) =>
