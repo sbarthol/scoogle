@@ -37,13 +37,5 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
     argName = "dir"
   )
 
-  val overridePresentLinks: ScallopOption[Boolean] = toggle(
-    name = "overridePresentLinks",
-    noshort = true,
-    descrYes =
-      "Redownloads links already present in the database and overrides the content",
-    descrNo = "Does not redownload the links already present in the database"
-  )
-
   verify()
 }

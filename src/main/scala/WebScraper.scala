@@ -16,11 +16,7 @@ object WebScraper {
         new MasterActor(
           sources = sources,
           databaseDirectory = conf.databaseDirectory.apply(),
-          maxConcurrentSockets = conf.maxConcurrentSockets.apply(),
-          overridePresentLinks = conf.overridePresentLinks.toOption match {
-            case Some(true) => true
-            case _          => false
-          }
+          maxConcurrentSockets = conf.maxConcurrentSockets.apply()
         )
       ),
       name = "master"

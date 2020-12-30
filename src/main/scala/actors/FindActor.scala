@@ -25,7 +25,6 @@ class FindActor(databaseDirectory: String) extends Actor {
   )
 
   override def receive: Receive = { case Find(words) =>
-
     implicit val timeout: Timeout =
       Timeout(duration = FiniteDuration(5, SECONDS))
     val future =

@@ -57,7 +57,6 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
   private class PutActor(invertedIndexDb: DB, textDb: DB) extends Actor {
 
     override def receive: Receive = { case Put(words, link, text) =>
-
       if (textDb.get(link) == null) {
         textDb.put(link, text)
         words.foreach(word => {

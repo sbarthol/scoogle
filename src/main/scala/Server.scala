@@ -19,7 +19,7 @@ object Server {
     val findActor = system.actorOf(
       props = Props(
         new FindActor(
-          databaseDirectory =  "target", // Todo: parse from argument
+          databaseDirectory = "target" // Todo: parse from argument
         )
       ),
       name = "find"
@@ -29,7 +29,7 @@ object Server {
       Timeout(duration = FiniteDuration(5, SECONDS))
     val linksFuture = findActor ? FindActor.Find(words = List())
     linksFuture.onComplete {
-      case Success(value) => ???
+      case Success(value)     => ???
       case Failure(exception) => throw exception
     }
 

@@ -13,8 +13,7 @@ import scala.collection.mutable
 class MasterActor(
     sources: List[Source],
     databaseDirectory: String,
-    maxConcurrentSockets: Int,
-    overridePresentLinks: Boolean
+    maxConcurrentSockets: Int
 ) extends Actor {
 
   override val supervisorStrategy: OneForOneStrategy =
@@ -60,7 +59,7 @@ class MasterActor(
         new SchedulerActor(
           source = source.link,
           maxDepth = source.depth,
-          overridePresentLinks = overridePresentLinks,
+          scrapePresentLinks = source.scrapePresent,
           levelDBActor = levelDBActor,
           getterActor = getterActor
         )
