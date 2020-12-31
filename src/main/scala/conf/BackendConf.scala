@@ -1,0 +1,31 @@
+package conf
+
+import org.rogach.scallop.{ScallopConf, ScallopOption}
+
+class BackendConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+
+  banner(
+    """This program is a backend that answers
+      | requests to the prefilled levelDB database""".stripMargin
+  )
+
+  val port: ScallopOption[Int] = opt[Int](
+    name = "port",
+    noshort = true,
+    descr = "The port number on which the backend listens.",
+    required = true,
+    validate = p => {p >= 0 && p <= (1 << 16)},
+    argName = "portNumber"
+  )
+
+  val databaseDirectory: ScallopOption[String] = opt[String](
+    name = "databaseDirectory",
+    noshort = true,
+    descr = "The directory pointing to the database files. Defaults to ./target.",
+    default = Some("target"),
+    validate = _.nonEmpty,
+    argName = "dir"
+  )
+
+  verify()
+}

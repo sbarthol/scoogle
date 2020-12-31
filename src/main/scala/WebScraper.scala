@@ -1,13 +1,13 @@
 import actors.MasterActor
 import akka.actor.{ActorSystem, Props}
-import conf.Conf
+import conf.WebScraperConf
 import source.SourcesLoader
 
 object WebScraper {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new Conf(args)
+    val conf = new WebScraperConf(args)
     val sources = SourcesLoader.loadFromFile(filepath = conf.sourceFilepath.apply())
     val system = ActorSystem("WebCrawler")
 

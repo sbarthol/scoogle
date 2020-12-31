@@ -2,7 +2,7 @@ package conf
 
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
-class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
+class WebScraperConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   banner("""This program is a webscraper that takes as input list of links as a
       |starting point. It then downloads the links and stores the contents
