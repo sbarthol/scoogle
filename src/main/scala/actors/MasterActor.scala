@@ -28,7 +28,8 @@ class MasterActor(
     props = Props(
       new LevelDBActor(
         invertedIndexFilepath = databaseDirectory + "/invertedIndexDb",
-        textFilepath = databaseDirectory + "/textDb"
+        textFilepath = databaseDirectory + "/textDb",
+        titleFilepath = databaseDirectory + "/titleDb"
       )
     ),
     name = "levelDB"

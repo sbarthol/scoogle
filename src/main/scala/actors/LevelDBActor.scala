@@ -3,14 +3,18 @@ package actors
 import actors.LevelDBActor._
 import akka.actor.{Actor, Props}
 import org.fusesource.leveldbjni.JniDBFactory.factory
-import org.iq80.leveldb.{DB, Options}
+import org.iq80.leveldb.Options
 import org.slf4j.LoggerFactory
 
 import java.io._
 import scala.collection.mutable
 import scala.language.implicitConversions
 
-class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends Actor {
+class LevelDBActor(
+    invertedIndexFilepath: String,
+    textFilepath: String,
+    titleFilepath: String
+) extends Actor {
 
   private val logger = LoggerFactory.getLogger(classOf[LevelDBActor])
   private val options = new Options
@@ -19,25 +23,27 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
   private val invertedIndexDb =
     factory.open(new File(invertedIndexFilepath), options)
   private val textDb = factory.open(new File(textFilepath), options)
+  private val titleDb = factory.open(new File(titleFilepath), options)
 
   sys.addShutdownHook {
     invertedIndexDb.close()
     textDb.close()
+    titleDb.close()
     logger.debug("Database was shut down")
   }
 
   private val putActor = context.actorOf(
-    props = Props(new PutActor(invertedIndexDb = invertedIndexDb, textDb = textDb)),
+    props = Props(new PutActor),
     name = "levelDB.put"
   )
 
   override def receive: Receive = {
 
-    case Put(words, link, text) =>
-      putActor ! Put(words, link, text)
+    case Put(words, link, text, title) =>
+      putActor ! Put(words, link, text, title)
 
     case Inside(link: String) =>
-      val inside = textDb.get(link) != null
+      val inside = titleDb.get(link) != null
       logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the database")
       sender ! inside
 
@@ -55,16 +61,22 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
 
       sender ! linkMap.toList
         .map(tuple =>
-          Item(link = tuple._1, title = "Foo", score = tuple._2, text = textDb.get(tuple._1))
+          Item(
+            link = tuple._1,
+            title = titleDb.get(tuple._1),
+            score = tuple._2,
+            text = textDb.get(tuple._1)
+          )
         )
         .sortBy(-_.score)
   }
 
-  private class PutActor(invertedIndexDb: DB, textDb: DB) extends Actor {
+  private class PutActor extends Actor {
 
-    override def receive: Receive = { case Put(words, link, text) =>
+    override def receive: Receive = { case Put(words, link, text, title) =>
       if (textDb.get(link) == null) {
         textDb.put(link, text)
+        titleDb.put(link, title)
         words.foreach(word => {
 
           val rawLinks = invertedIndexDb.get(word)
@@ -101,7 +113,7 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
 
 object LevelDBActor {
 
-  case class Put(words: List[String], link: String, text: String)
+  case class Put(words: List[String], link: String, text: String, title: String)
   case class Inside(link: String)
   case class GetLinks(words: List[String])
   case class Item(link: String, title: String, score: Int, text: String)

@@ -16,8 +16,14 @@ class ParserActor(levelDBActor: ActorRef) extends Actor {
     levelDBActor ! LevelDBActor.Put(
       words = getWords(text),
       link = link,
-      text = text
+      text = text,
+      title = getTitle(html)
     )
+  }
+
+  private def getTitle(html: String): String = {
+
+    Jsoup.parse(html).title()
   }
 
   private def getText(html: String): String = {
