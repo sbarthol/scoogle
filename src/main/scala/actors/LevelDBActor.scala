@@ -55,7 +55,7 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
 
       sender ! linkMap.toList
         .map(tuple =>
-          Item(link = tuple._1, title = "Foo", score = tuple._2, text = "Bar")
+          Item(link = tuple._1, title = "Foo", score = tuple._2, text = textDb.get(tuple._1))
         )
         .sortBy(-_.score)
   }
