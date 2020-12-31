@@ -53,7 +53,11 @@ class LevelDBActor(invertedIndexFilepath: String, textFilepath: String) extends 
         )
       })
 
-      sender ! linkMap.toList.sortBy(-_._2)
+      sender ! linkMap.toList
+        .map(tuple =>
+          Item(link = tuple._1, title = "Foo", score = tuple._2, text = "Bar")
+        )
+        .sortBy(-_.score)
   }
 
   private class PutActor(invertedIndexDb: DB, textDb: DB) extends Actor {
@@ -100,4 +104,5 @@ object LevelDBActor {
   case class Put(words: List[String], link: String, text: String)
   case class Inside(link: String)
   case class GetLinks(words: List[String])
+  case class Item(link: String, title: String, score: Int, text: String)
 }

@@ -7,10 +7,17 @@ import akka.pattern.ask
 import akka.util.Timeout
 import conf.BackendConf
 import org.slf4j.LoggerFactory
+import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.util.{Failure, Success}
+
+object MyJsonProtocol extends DefaultJsonProtocol {
+  implicit val itemFormat: RootJsonFormat[LevelDBActor.Item] = jsonFormat4(
+    LevelDBActor.Item
+  )
+}
 
 object Backend {
 
@@ -34,11 +41,12 @@ object Backend {
 
     val route = parameters("keyword".repeated, "keyword") {
       implicit val timeout: Timeout = Timeout(FiniteDuration(length = 20, unit = SECONDS))
+      import MyJsonProtocol._
 
       (keywords, _) =>
-        val future = (levelDBActor ? LevelDBActor.GetLinks(keywords.toList)).map(value =>
-          value.toString
-        ) // Todo toJson
+        val future = (levelDBActor ? LevelDBActor.GetLinks(keywords.toList))
+          .mapTo[List[LevelDBActor.Item]]
+          .map(_.toJson.compactPrint)
 
         onComplete(future) {
           case Success(value) =>
