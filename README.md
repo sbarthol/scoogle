@@ -1,4 +1,4 @@
-# Akkaoogle
+# Scoogle
 
 Web Scraper and Server. Do not run both processes at the same time because LevelDB does not support multiple processes.
 
