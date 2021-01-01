@@ -1,0 +1,18 @@
+html,
+body {
+  font-size: 1rem;
+}
+
+.googleBox {
+  margin: 160px auto;
+}
+
+.googleBox > img {
+  margin: 0 auto;
+  display: block;
+}
+
+.buttonBox {
+  max-width: 290px;
+  margin: 0 auto;
+}
