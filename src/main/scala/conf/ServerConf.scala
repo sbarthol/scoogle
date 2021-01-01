@@ -22,7 +22,7 @@ class ServerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val databaseDirectory: ScallopOption[String] = opt[String](
     name = "databaseDirectory",
     noshort = true,
-    descr = "The directory pointing to the database files. Defaults to ./target.",
+    descr = "The directory containing the database files. Defaults to ./target.",
     default = Some("target"),
     validate = _.nonEmpty,
     argName = "dir"
