@@ -60,7 +60,7 @@ class MasterActor(
         new SchedulerActor(
           source = source.link,
           maxDepth = source.depth,
-          scrapePresentLinks = source.scrapePresent,
+          crawlPresentLinks = source.crawlPresent,
           levelDBActor = levelDBActor,
           getterActor = getterActor
         )

@@ -15,7 +15,7 @@ class ServerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     noshort = true,
     descr = "The port number on which the server listens.",
     required = true,
-    validate = p => {p >= 0 && p <= (1 << 16)},
+    validate = p => { p >= 0 && p <= (1 << 16) },
     argName = "portNumber"
   )
 

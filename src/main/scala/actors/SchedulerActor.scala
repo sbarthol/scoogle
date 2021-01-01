@@ -26,7 +26,7 @@ object SchedulerActor {
 class SchedulerActor(
     source: String,
     maxDepth: Int,
-    scrapePresentLinks: Boolean,
+    crawlPresentLinks: Boolean,
     levelDBActor: ActorRef,
     getterActor: ActorRef
 ) extends Actor {
@@ -48,7 +48,7 @@ class SchedulerActor(
     throw new InitializationException(s"link $source not valid")
   } else if (isDownloading(source)) {
     throw new InitializationException(s"link $source is already being downloaded")
-  } else if (!scrapePresentLinks && isInDB(source)) {
+  } else if (!crawlPresentLinks && isInDB(source)) {
     throw new InitializationException(s"link $source is already in the database")
   } else {
 
@@ -86,7 +86,7 @@ class SchedulerActor(
         if (
           urlValidator.isValid(newLink)
           && !isDownloading(newLink)
-          && (scrapePresentLinks || !isInDB(newLink))
+          && (crawlPresentLinks || !isInDB(newLink))
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
         ) {
