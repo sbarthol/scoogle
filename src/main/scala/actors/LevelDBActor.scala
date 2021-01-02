@@ -59,7 +59,9 @@ class LevelDBActor(
         )
       })
 
-      sender ! linkMap.toList.sortBy(-_._2).take(20)
+      sender ! linkMap.toList
+        .sortBy(-_._2)
+        .take(20)
         .map(tuple => {
 
           val title: String = titleDb.get(tuple._1)
