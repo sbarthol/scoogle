@@ -1,0 +1,22 @@
+.Logo {
+  width: 120px;
+  float: left;
+  margin: 10px auto auto 15px;
+}
+
+.SearchBoxContainer {
+  display: inline-block;
+  margin: 20px auto auto 35px;
+}
+
+.HeaderBox {
+  height: auto;
+  display: inline-block;
+  width: 100%;
+  border-top: 300px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgb(214, 214, 214);
+}
+
+
+
