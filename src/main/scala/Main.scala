@@ -1,24 +1,61 @@
-import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
+import actors.{GetterActor, ParserActor, SchedulerActor}
+import akka.actor.{Actor, ActorSystem, Props}
+import client.NettyClient
 import org.slf4j.LoggerFactory
-
-class Greeter extends Actor {
-
-  val logger = LoggerFactory.getLogger("oklm")
-  override def receive: Receive = { case s: String =>
-    logger.error(s)
-  }
-}
 
 object Main {
 
   def main(args: Array[String]): Unit = {
-    val system = ActorSystem("pingpong")
-    val greeter = system.actorOf(props = Props[Greeter], name = "Sacha")
-    greeter ! (message = "coucou")
-    Thread.sleep(500)
-    val logger = LoggerFactory.getLogger("chapters.introduction.HelloWorld1")
-    logger.debug("Hello world.")
-    //greeter ! PoisonPill
-    system.terminate()
+
+    // Todo: use the request/response pattern of Akka
+
+    val system = ActorSystem("WebCrawler")
+
+    val getterActor =
+      system.actorOf(
+        props = Props(
+          new GetterActor(
+            client = NettyClient.client,
+            maxConcurrentConnections = 40
+          )
+        ),
+        name = "getter"
+      )
+    val parserActor =
+      system.actorOf(props = Props(new ParserActor), name = "parser")
+    val seed = List()
+
+    seed.foreach(source => {
+      system.actorOf(
+        props = Props(
+          new SchedulerActor(
+            source = source,
+            maxDepth = 1,
+            getterActor = getterActor,
+            parserActor = parserActor
+          )
+        ),
+        name = "scheduler"
+      )
+    })
+
+    system.actorOf(
+      Props(new Actor {
+
+        private val logger = LoggerFactory.getLogger("dummy")
+
+        while (true) {
+          Thread.sleep(1000 * 3)
+          logger.info(s"Sending the words")
+          parserActor ! ParserActor.Find(List("cia","nick","csi"))
+        }
+
+        override def receive: Receive = { case ParserActor.Result(links) =>
+
+          logger.info(s"The links are ${links}")
+        }
+      }),
+      name = "dummy"
+    )
   }
 }
