@@ -28,7 +28,7 @@ class App extends React.Component {
   getSearchResults() {
 
     this.setState({searchResults: [], showHomePage: false})
-    const apiUrl = `http://localhost:3001/api?query=${this.state.searchBarText}`;
+    const apiUrl = `/api?query=${this.state.searchBarText}`;
 
     fetch(apiUrl)
       .then((res) => {return res.json()})
