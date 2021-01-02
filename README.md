@@ -35,11 +35,8 @@ Find below an example of such a file. The different fields designate the followi
 Run the `WebCrawler.scala` file with the following command line arguments.
 
 - `--databaseDirectory` The directory in which to put the database files. Defaults to *./target*.
-
 - `--maxConcurrentSockets` The maximum number of TCP sockets that the program will open simultaneously. Sometimes if this number is too large, the requests will time out. The default is 30.
-
 - `--sourceFilepath` The filepath of the source file containing the source links.
-
 - `-h, --help` Show help message.
 
 ## Frontend written in *React*
@@ -60,5 +57,5 @@ An *Akka HTTP* server runs and serves the following routes:
 Run the `Server.scala` file with the following command line arguments.
 
 - `--port` The port number on which the server listens.
-
 - `--databaseDirectory` The directory containing the database files. Defaults to *./target*.
+- `-h, --help` Show help message.
