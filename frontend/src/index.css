@@ -3,8 +3,12 @@ body {
   font-size: 1rem;
 }
 
+.logo {
+  width: 350px;
+}
+
 .googleBox {
-  margin: 160px auto;
+  margin: 10% auto;
 }
 
 .googleBox > img {

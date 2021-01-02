@@ -1,6 +1,6 @@
 import React from 'react';
 
-import logo from './images/googlelogo_color_272x92dp.png';
+import logo from './images/scoogle_logo.png';
 import SearchBox from './components/SearchBox';
 import GButton from './components/GButton';
 
@@ -8,7 +8,7 @@ import GButton from './components/GButton';
 function App() {
   return (
     <div className="googleBox">
-      <img src={logo} className="App-logo" alt="logo" />
+      <img src={logo} className="logo" alt="logo" />
       <SearchBox />
       <div className="buttonBox">
         <GButton text="Google Search" />
