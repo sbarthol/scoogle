@@ -51,7 +51,7 @@ The frontend consists of a main screen with a searchbar. Upon hitting a *Search*
 An *Akka HTTP* server runs and serves the following routes:
 
 - `/` The frontend consisting of the static files inside the */build* folder
-- `/api` Given a list of keywords given by the repeated argument `keyword`, this route will respond with a list of links that match against those keywords.
+- `/api` Given a `query` HTTP parameter representing a list of space-separated keywords, this route will respond with a list of links that match against those keywords.
 
 #
 

@@ -49,13 +49,14 @@ object Server {
 
     val apiRoute = path("api") {
       get {
-        parameters("keyword".repeated, "keyword") {
+        parameters("query") {
           implicit val timeout: Timeout =
             Timeout(FiniteDuration(length = 20, unit = SECONDS))
           import MyJsonProtocol._
 
-          (keywords, _) =>
-            val future = (levelDBActor ? LevelDBActor.GetLinks(keywords.toList))
+          query =>
+            val keywords = query.split(" ").toList
+            val future = (levelDBActor ? LevelDBActor.GetLinks(keywords))
               .mapTo[List[LevelDBActor.Item]]
               .map(_.toJson.compactPrint)
 
