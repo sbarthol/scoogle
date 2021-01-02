@@ -5,6 +5,8 @@ Switzerland. Its components are a webcrawler, a LevelDB key-value store, a serve
 written in React. Since LevelDB does not support two simultaneous processes, it is advised to run the webcrawler first,
 followed by the server once the webcrawler is stopped.
 
+![demo](demo.gif)
+
 ## Webcrawler based on *Akka Actors*
 
 The webcrawler takes as input the seed in the shape of an XML file. 
