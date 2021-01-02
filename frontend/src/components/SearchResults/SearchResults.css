@@ -1,0 +1,42 @@
+.Block {
+  width: 600px;
+  font-family: Arial, sans-serif;
+  text-align: left;
+  white-space: normal;
+  margin: 30px 0;
+}
+
+.Link {
+  font-size: 14px;
+  color: #202124;
+  margin: 8px 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.Title {
+  font-size: 20px;
+  color: #1a0dab;
+  margin: 8px 0;
+  text-decoration: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.Text {
+  color: #4d5156;
+  font-size: 14px;
+  margin: 8px 0;
+  overflow: hidden;
+  height: 50px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.SearchResultsBox {
+
+  margin: 100px;
+}

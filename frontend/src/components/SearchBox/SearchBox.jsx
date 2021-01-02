@@ -1,7 +1,7 @@
 import React from 'react';
 import './SearchBox.css';
 
-function SearchBox() {
+function SearchBox({handleSearchBarChange}) {
   return (
     <div className="SearchBox">
       <div>
@@ -26,6 +26,7 @@ function SearchBox() {
             spellCheck="false"
             title="Search"
             aria-label="Search"
+            onChange={handleSearchBarChange}
           />
         </div>
       </div>

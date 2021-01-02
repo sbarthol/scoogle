@@ -59,16 +59,20 @@ class LevelDBActor(
         )
       })
 
-      sender ! linkMap.toList
-        .map(tuple =>
+      sender ! linkMap.toList.sortBy(-_._2).take(20)
+        .map(tuple => {
+
+          val title: String = titleDb.get(tuple._1)
+          val text: String = textDb.get(tuple._1)
+          val link: String = tuple._1
+
           Item(
-            link = tuple._1,
-            title = titleDb.get(tuple._1),
+            link = link,
+            title = title.take(50), // Todo: test those numbers
             score = tuple._2,
-            text = textDb.get(tuple._1)
+            text = text.take(300)
           )
-        )
-        .sortBy(-_.score)
+        })
   }
 
   private class PutActor extends Actor {
