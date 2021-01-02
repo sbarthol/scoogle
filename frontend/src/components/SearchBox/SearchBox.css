@@ -89,6 +89,7 @@ svg:not(:root) {
   outline: none;
   display: flex;
   flex: 100%;
+  font-size: 18px;
   -webkit-tap-highlight-color: transparent;
 }
 
