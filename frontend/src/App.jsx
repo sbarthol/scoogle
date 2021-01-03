@@ -48,7 +48,7 @@ class App extends React.Component {
           <SearchBox handleSearchBarChange={this.handleSearchBarChange} 
                         text={this.state.searchBarText} />
           <div className="buttonBox">
-            <Button text="Google Search" onClick={this.getSearchResults} />
+            <Button text="Scoogle Search" onClick={this.getSearchResults} />
             <Button text="I'm Feeling Lucky" />
           </div>
         </div>
