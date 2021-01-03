@@ -109,7 +109,7 @@ class SchedulerActor(
     val duration = FiniteDuration(5, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
-      (context.parent ? MasterActor.Inside(link)).asInstanceOf[Future[Boolean]]
+      (context.parent ? MasterActor.Inside(link)).mapTo[Boolean]
 
     try {
       Await.result(awaitable = future, atMost = duration)
@@ -126,7 +126,7 @@ class SchedulerActor(
     val duration = FiniteDuration(5, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
-      (levelDBActor ? LevelDBActor.Inside(link)).asInstanceOf[Future[Boolean]]
+      (levelDBActor ? LevelDBActor.Inside(link)).mapTo[Boolean]
 
     try {
       Await.result(awaitable = future, atMost = duration)
