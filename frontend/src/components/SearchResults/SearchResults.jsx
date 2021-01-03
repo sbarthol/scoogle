@@ -1,10 +1,10 @@
 import React from "react";
 import "./SearchResults.css";
 
-function SearchResult({ title, link, text }) {
+function SearchResult({ title, link, text, cleanLink }) {
   return (
     <div className="Block">
-      <p className="Link">{link}</p>
+      <p className="Link">{cleanLink}</p>
       <a href={link} className="Title">
         {title}
       </a>
@@ -22,6 +22,7 @@ function SearchResults({ searchResults }) {
             title={searchResult.title}
             link={searchResult.link}
             text={searchResult.text}
+            cleanLink={searchResult.cleanLink}
           />
         );
       })}

@@ -14,7 +14,7 @@ import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.util.{Failure, Success}
 
 object MyJsonProtocol extends DefaultJsonProtocol {
-  implicit val itemFormat: RootJsonFormat[LevelDBActor.Item] = jsonFormat4(
+  implicit val itemFormat: RootJsonFormat[LevelDBActor.Item] = jsonFormat5(
     LevelDBActor.Item
   )
 }

@@ -92,10 +92,11 @@ class LevelDBActor(
           ).toString
 
           Item(
-            link = cleanLink,
+            link = link,
             title = title.take(50), // Todo: test those numbers
             score = score,
-            text = text.take(300)
+            text = text.take(300),
+            cleanLink = cleanLink
           )
         }
   }
@@ -152,5 +153,5 @@ object LevelDBActor {
   case class IsBlacklisted(link: String)
   case class Inside(link: String)
   case class GetLinks(words: List[String])
-  case class Item(link: String, title: String, score: Int, text: String)
+  case class Item(cleanLink: String, link: String, title: String, score: Int, text: String)
 }
