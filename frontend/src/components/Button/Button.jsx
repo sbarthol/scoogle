@@ -1,6 +1,6 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import './Button.css';
+import React from "react";
+import PropTypes from "prop-types";
+import "./Button.css";
 
 function Button(props) {
   const { text, onClick } = props;
