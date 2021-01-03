@@ -2,7 +2,7 @@ package actors
 
 import actors.MasterActor._
 import actors.SchedulerActor.{DownloadSourceException, InitializationException}
-import akka.actor.SupervisorStrategy.{Restart, Stop}
+import akka.actor.SupervisorStrategy.{Escalate, Restart, Stop}
 import akka.actor.{Actor, OneForOneStrategy, Props}
 import client.NettyClient
 import org.slf4j.LoggerFactory
@@ -20,7 +20,7 @@ class MasterActor(
     OneForOneStrategy(maxNrOfRetries = 3) {
       case _: InitializationException => Stop
       case _: DownloadSourceException => Restart
-      case _: Exception               => Stop
+      case _: Exception               => Escalate
     }
 
   private val downloading = new mutable.HashSet[String]
