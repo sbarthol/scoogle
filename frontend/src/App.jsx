@@ -2,7 +2,7 @@ import React from 'react';
 
 import logo from './images/scoogle_logo.png';
 import SearchBox from './components/SearchBox';
-import GButton from './components/GButton';
+import Button from './components/Button';
 import SearchResults from './components/SearchResults';
 import Header from './components/Header'
 
@@ -48,8 +48,8 @@ class App extends React.Component {
           <SearchBox handleSearchBarChange={this.handleSearchBarChange} 
                         text={this.state.searchBarText} />
           <div className="buttonBox">
-            <GButton text="Google Search" onClick={this.getSearchResults} />
-            <GButton text="I'm Feeling Lucky" />
+            <Button text="Google Search" onClick={this.getSearchResults} />
+            <Button text="I'm Feeling Lucky" />
           </div>
         </div>
       );

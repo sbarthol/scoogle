@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './GButton.css';
+import './Button.css';
 
-function GButton(props) {
+function Button(props) {
   const { text, onClick } = props;
   return (
     <button type="button" onClick={onClick}>
@@ -11,13 +11,13 @@ function GButton(props) {
   );
 }
 
-GButton.propTypes = {
+Button.propTypes = {
   text: PropTypes.string.isRequired,
   onClick: PropTypes.func,
 };
 
-GButton.defaultProps = {
+Button.defaultProps = {
   onClick: null,
 };
 
-export default GButton;
+export default Button;
