@@ -43,7 +43,7 @@ Run the `WebCrawler.scala` file with the following command line arguments.
 
 Inside the *frontend* directory, run `npm start` in order to serve the frontend in developer mode. Run `npm run build` to build the production files. When the build has completed, the static files will be located inside the *target* directory of the maven project and will be served by the `Server` class.
 
-The frontend consists of a main screen with a searchbar. Upon hitting a *Search* button, the frontend displays a list of websites matching the keywords put in the searchbar.
+The frontend consists of a home page with a searchbar. Upon hitting a *Search* button, the frontend displays a list of websites matching the keywords put in the searchbar.
 
 ## Server based on *Akka HTTP*
 
