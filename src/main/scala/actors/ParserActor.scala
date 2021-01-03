@@ -34,7 +34,7 @@ class ParserActor(levelDBActor: ActorRef) extends Actor {
       .text()
   }
 
-  private def getWords(text: String): List[String] = {
+  private def getWords(text: String): List[(String, Int)] = {
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
     text
@@ -42,7 +42,10 @@ class ParserActor(levelDBActor: ActorRef) extends Actor {
       .toList
       .filter(_.length >= minimumWordLength)
       .map(_.toLowerCase)
-      .distinct
+      .groupBy(identity)
+      .view
+      .mapValues(_.size)
+      .toList
   }
 
   private def getLinks(html: String): List[String] = {

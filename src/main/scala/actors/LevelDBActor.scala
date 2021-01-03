@@ -54,22 +54,25 @@ class LevelDBActor(
       words.foreach(word => {
 
         val raw = invertedIndexDb.get(word)
-        val matchingLinks: List[String] = if (raw == null) List() else raw
-        matchingLinks.foreach(link =>
-          linkMap.put(key = link, value = linkMap.getOrElse(key = link, default = 0) + 1)
-        )
+        val matchingLinks: List[(String, Int)] = if (raw == null) List() else raw
+
+        matchingLinks.foreach { case (link, count) =>
+          linkMap.put(
+            key = link,
+            value = linkMap.getOrElse(key = link, default = 0) + count
+          )
+        }
       })
 
       sender ! linkMap.toList
         .sortBy(-_._2)
         .take(20)
-        .map(tuple => {
+        .map { case (link, score) =>
+          val title: String = titleDb.get(link)
+          val text: String = textDb.get(link)
 
-          val title: String = titleDb.get(tuple._1)
-          val text: String = textDb.get(tuple._1)
-
-          val uri = new URI(tuple._1)
-          val link: String = new URI(
+          val uri = new URI(link)
+          val cleanLink: String = new URI(
             uri.getScheme,
             uri.getAuthority,
             uri.getPath,
@@ -78,12 +81,12 @@ class LevelDBActor(
           ).toString
 
           Item(
-            link = link,
+            link = cleanLink,
             title = title.take(50), // Todo: test those numbers
-            score = tuple._2,
+            score = score,
             text = text.take(300)
           )
-        })
+        }
   }
 
   private class PutActor extends Actor {
@@ -92,13 +95,13 @@ class LevelDBActor(
       if (textDb.get(link) == null) {
         textDb.put(link, text)
         titleDb.put(link, title)
-        words.foreach(word => {
 
+        words.foreach { case (word, count) =>
           val rawLinks = invertedIndexDb.get(word)
-          val links: List[String] = if (rawLinks == null) List() else rawLinks
-          invertedIndexDb.put(word, link :: links)
+          val links: List[(String, Int)] = if (rawLinks == null) List() else rawLinks
+          invertedIndexDb.put(word, (link, count) :: links)
+        }
 
-        })
         logger.debug(s"Link $link put in database")
       } else {
         logger.debug(s"Link $link already present in the database")
@@ -107,7 +110,7 @@ class LevelDBActor(
   }
 
   implicit private def serializeString(s: String): Array[Byte] = s.getBytes
-  implicit private def serializeList(l: List[String]): Array[Byte] = {
+  implicit private def serializeList[A](l: List[A]): Array[Byte] = {
 
     val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
     val oos = new ObjectOutputStream(stream)
@@ -117,10 +120,10 @@ class LevelDBActor(
   }
 
   implicit private def deserializeString(b: Array[Byte]): String = new String(b)
-  implicit private def deserializeList(b: Array[Byte]): List[String] = {
+  implicit private def deserializeList[A](b: Array[Byte]): List[A] = {
 
     val ois = new ObjectInputStream(new ByteArrayInputStream(b))
-    val value = ois.readObject.asInstanceOf[List[String]]
+    val value = ois.readObject.asInstanceOf[List[A]]
     ois.close()
     value
   }
@@ -128,7 +131,7 @@ class LevelDBActor(
 
 object LevelDBActor {
 
-  case class Put(words: List[String], link: String, text: String, title: String)
+  case class Put(words: List[(String, Int)], link: String, text: String, title: String)
   case class Inside(link: String)
   case class GetLinks(words: List[String])
   case class Item(link: String, title: String, score: Int, text: String)
