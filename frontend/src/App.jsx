@@ -47,7 +47,14 @@ class App extends React.Component {
             text={this.state.searchBarText}
           />
           <div className="buttonBox">
-            <Button text="Scoogle Search" onClick={this.getSearchResults} />
+            <Button
+              text="Scoogle Search"
+              onClick={() => {
+                if (this.state.searchBarText.replace(/\s/g, "").length) {
+                  this.getSearchResults();
+                }
+              }}
+            />
             <Button text="I'm Feeling Lucky" />
           </div>
         </div>
