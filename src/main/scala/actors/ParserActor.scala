@@ -28,10 +28,15 @@ class ParserActor(levelDBActor: ActorRef) extends Actor {
 
   private def getText(html: String): String = {
 
-    Jsoup
-      .parse(html)
-      .body()
-      .text()
+    try {
+      Jsoup
+        .parse(html)
+        .body()
+        .text()
+
+    } catch {
+      case _: Exception => ""
+    }
   }
 
   private def getWords(text: String): List[(String, Int)] = {

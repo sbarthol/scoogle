@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 
 object SchedulerActor {
 
@@ -72,7 +72,7 @@ class SchedulerActor(
       if (source == link) {
         throw new DownloadSourceException(errorDescription)
       } else {
-        context.parent ! MasterActor.Error
+        context.parent ! MasterActor.Error(link)
         logger.warn(errorDescription)
       }
 
@@ -85,10 +85,11 @@ class SchedulerActor(
 
         if (
           urlValidator.isValid(newLink)
-          && !isDownloading(newLink)
-          && (crawlPresentLinks || !isInDB(newLink))
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
+          && !isDownloading(newLink)
+          && !isBlacklisted(newLink)
+          && (crawlPresentLinks || !isInDB(newLink))
         ) {
           distanceToSource.put(
             key = newLink,
@@ -101,6 +102,23 @@ class SchedulerActor(
           getterActor ! GetterActor.Link(newLink)
         }
       })
+  }
+
+  private def isBlacklisted(link: String): Boolean = {
+
+    implicit val ec: ExecutionContext = context.dispatcher
+    val duration = FiniteDuration(5, SECONDS)
+    implicit val timeout: Timeout = Timeout(duration)
+    val future =
+      (levelDBActor ? LevelDBActor.IsBlacklisted(link)).mapTo[Boolean]
+
+    try {
+      Await.result(awaitable = future, atMost = duration)
+    } catch {
+      case e: Exception =>
+        logger.warn(s"isBlacklisted future failed: ${e.toString}")
+        false
+    }
   }
 
   private def isDownloading(link: String): Boolean = {

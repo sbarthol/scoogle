@@ -26,11 +26,7 @@ class MasterActor(
   private val downloading = new mutable.HashSet[String]
   private val levelDBActor = context.actorOf(
     props = Props(
-      new LevelDBActor(
-        invertedIndexFilepath = databaseDirectory + "/invertedIndexDb",
-        textFilepath = databaseDirectory + "/textDb",
-        titleFilepath = databaseDirectory + "/titleDb"
-      )
+      new LevelDBActor(databaseDirectory = databaseDirectory)
     ),
     name = "levelDB"
   )
@@ -94,8 +90,9 @@ class MasterActor(
     case Increment =>
       completed = completed + 1
 
-    case Error =>
+    case Error(link) =>
       failed = failed + 1
+      levelDBActor ! LevelDBActor.Blacklist(link)
   }
 }
 
@@ -104,7 +101,7 @@ object MasterActor {
   case class Inside(link: String)
   case class Put(link: String)
   case class Remove(link: String)
+  case class Error(link: String)
   case object Increment
   case object Status
-  case object Error
 }

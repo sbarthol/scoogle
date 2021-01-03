@@ -32,9 +32,7 @@ object Server {
     val levelDBActor = system.actorOf(
       props = Props(
         new LevelDBActor(
-          invertedIndexFilepath = conf.databaseDirectory.apply() + "/invertedIndexDb",
-          textFilepath = conf.databaseDirectory.apply() + "/textDb",
-          titleFilepath = conf.databaseDirectory.apply() + "/titleDb"
+          databaseDirectory = conf.databaseDirectory.apply()
         )
       ),
       name = "levelDB"
