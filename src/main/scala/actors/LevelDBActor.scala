@@ -7,6 +7,7 @@ import org.iq80.leveldb.Options
 import org.slf4j.LoggerFactory
 
 import java.io._
+import java.net.URI
 import scala.collection.mutable
 import scala.language.implicitConversions
 
@@ -66,7 +67,15 @@ class LevelDBActor(
 
           val title: String = titleDb.get(tuple._1)
           val text: String = textDb.get(tuple._1)
-          val link: String = tuple._1
+
+          val uri = new URI(tuple._1)
+          val link: String = new URI(
+            uri.getScheme,
+            uri.getAuthority,
+            uri.getPath,
+            null,
+            uri.getFragment
+          ).toString
 
           Item(
             link = link,
