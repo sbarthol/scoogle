@@ -17,6 +17,9 @@ object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val itemFormat: RootJsonFormat[LevelDBActor.Item] = jsonFormat5(
     LevelDBActor.Item
   )
+  implicit val responseFormat: RootJsonFormat[LevelDBActor.Response] = jsonFormat2(
+    LevelDBActor.Response
+  )
 }
 
 object Server {
@@ -47,15 +50,17 @@ object Server {
 
     val apiRoute = path("api") {
       get {
-        parameters("query") {
+        parameters("query", "pageNumber".as[Int]) {
+
           implicit val timeout: Timeout =
             Timeout(FiniteDuration(length = 20, unit = SECONDS))
           import MyJsonProtocol._
 
-          query =>
+          (query, pageNumber) => {
+
             val keywords = query.split(" ").toList
-            val future = (levelDBActor ? LevelDBActor.GetLinks(keywords))
-              .mapTo[List[LevelDBActor.Item]]
+            val future = (levelDBActor ? LevelDBActor.GetLinks(keywords, pageNumber))
+              .mapTo[LevelDBActor.Response]
               .map(_.toJson.compactPrint)
 
             onComplete(future) {
@@ -70,12 +75,14 @@ object Server {
                 )
                 complete(StatusCodes.InternalServerError, error.getMessage)
             }
+          }
         }
       }
     }
 
     val bindingFuture =
       Http().newServerAt("localhost", conf.port.apply()).bind(apiRoute ~ frontendRoute)
+
     bindingFuture.onComplete {
       case Success(value) =>
         logger.info(s"Server started at address ${value.localAddress.toString}")

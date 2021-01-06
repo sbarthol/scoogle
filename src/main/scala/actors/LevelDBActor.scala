@@ -10,10 +10,16 @@ import java.io._
 import java.net.URI
 import scala.collection.mutable
 import scala.language.implicitConversions
+import scala.math.{ceil, max}
 
 class LevelDBActor(
     databaseDirectory: String
 ) extends Actor {
+
+  // Todo: test those numbers
+  private val maxLinksPerPage = 10
+  private val maxTitleLength = 50
+  private val maxTextLength = 300
 
   private val logger = LoggerFactory.getLogger(classOf[LevelDBActor])
   private val options = new Options
@@ -57,7 +63,7 @@ class LevelDBActor(
       logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the database")
       sender ! inside
 
-    case GetLinks(words: List[String]) =>
+    case GetLinks(words: List[String], pageNumber) =>
       val linkMap = mutable.HashMap[String, Int]()
 
       words.foreach(word => {
@@ -66,7 +72,6 @@ class LevelDBActor(
         val matchingLinks: List[(String, Int)] = if (raw == null) List() else raw
 
         matchingLinks.foreach { case (link, count) =>
-
           logger.debug(s"The word $word is contained $count times in link $link")
           linkMap.put(
             key = link,
@@ -75,9 +80,12 @@ class LevelDBActor(
         }
       })
 
-      sender ! linkMap.toList
+      logger.debug(s"Found a total of ${linkMap.size} links")
+
+      val totalPages = max(1, ceil(linkMap.size / maxLinksPerPage.toDouble).toInt)
+      val links = linkMap.toList
         .sortBy(-_._2)
-        .take(20)
+        .slice(from = maxLinksPerPage * (pageNumber - 1), until = maxLinksPerPage * pageNumber)
         .map { case (link, score) =>
           val title: String = titleDb.get(link)
           val text: String = textDb.get(link)
@@ -93,12 +101,14 @@ class LevelDBActor(
 
           Item(
             link = link,
-            title = title.take(50), // Todo: test those numbers
+            title = title.take(maxTitleLength),
             score = score,
-            text = text.take(300),
+            text = text.take(maxTextLength),
             cleanLink = cleanLink
           )
         }
+
+      sender ! Response(links = links, totalPages = totalPages)
   }
 
   private class PutActor extends Actor {
@@ -152,6 +162,13 @@ object LevelDBActor {
   case class Blacklist(link: String)
   case class IsBlacklisted(link: String)
   case class Inside(link: String)
-  case class GetLinks(words: List[String])
-  case class Item(cleanLink: String, link: String, title: String, score: Int, text: String)
+  case class Response(links: List[Item], totalPages: Int)
+  case class GetLinks(words: List[String], pageNumber: Int)
+  case class Item(
+      cleanLink: String,
+      link: String,
+      title: String,
+      score: Int,
+      text: String
+  )
 }

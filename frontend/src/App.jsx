@@ -5,14 +5,18 @@ import SearchBox from "./components/SearchBox";
 import Button from "./components/Button";
 import SearchResults from "./components/SearchResults";
 import Header from "./components/Header";
+import Pagination from "./components/Pagination";
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      searchResults: [],
+      links: [],
+      totalPages: 1,
       showHomePage: true,
       searchBarText: "",
+      searchText: "",
+      selectedPage: 1,
     };
 
     this.getSearchResults = this.getSearchResults.bind(this);
@@ -23,9 +27,13 @@ class App extends React.Component {
     this.setState({ searchBarText: e.target.value });
   }
 
-  getSearchResults() {
-    this.setState({ searchResults: [], showHomePage: false });
-    const apiUrl = `/api?query=${this.state.searchBarText}`;
+  getSearchResults(query, pageNumber) {
+    this.setState({
+      links: [],
+      totalPages: 1,
+      showHomePage: false,
+    });
+    const apiUrl = `/api?query=${query}&pageNumber=${pageNumber}`;
 
     fetch(apiUrl)
       .then((res) => {
@@ -33,8 +41,13 @@ class App extends React.Component {
       })
       .then((searchResults) => {
         console.log(searchResults);
-        this.setState({ searchResults: searchResults, showHomePage: false });
-      });
+        this.setState({
+          links: searchResults.links,
+          totalPages: searchResults.totalPages,
+          showHomePage: false,
+        });
+      })
+      .catch(console.log);
   }
 
   render() {
@@ -51,7 +64,9 @@ class App extends React.Component {
               text="Scoogle Search"
               onClick={() => {
                 if (this.state.searchBarText.replace(/\s/g, "").length) {
-                  this.getSearchResults();
+                  const searchText = this.state.searchBarText;
+                  this.setState({ searchText: searchText });
+                  this.getSearchResults(searchText, 1);
                 }
               }}
             />
@@ -66,7 +81,17 @@ class App extends React.Component {
             searchBarText={this.state.searchBarText}
             handleSearchBarChange={this.handleSearchBarChange}
           />
-          <SearchResults searchResults={this.state.searchResults} />
+          <SearchResults links={this.state.links} />
+          {this.state.totalPages >= 2 && (
+            <Pagination
+              numberOfOs={this.state.totalPages}
+              selectedO={this.state.selectedPage}
+              getSearchResultsForPage={(p) => {
+                this.setState({ selectedPage: p });
+                this.getSearchResults(this.state.searchText, p);
+              }}
+            />
+          )}
         </div>
       );
     }

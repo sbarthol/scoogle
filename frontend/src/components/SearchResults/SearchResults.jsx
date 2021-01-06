@@ -13,16 +13,16 @@ function SearchResult({ title, link, text, cleanLink }) {
   );
 }
 
-function SearchResults({ searchResults }) {
+function SearchResults({ links }) {
   return (
     <div className="SearchResultsBox">
-      {searchResults.map((searchResult) => {
+      {links.map((links) => {
         return (
           <SearchResult
-            title={searchResult.title}
-            link={searchResult.link}
-            text={searchResult.text}
-            cleanLink={searchResult.cleanLink}
+            title={links.title}
+            link={links.link}
+            text={links.text}
+            cleanLink={links.cleanLink}
           />
         );
       })}
