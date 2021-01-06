@@ -1,0 +1,70 @@
+.PaginationInnerBox {
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.PaginationOuterBox {
+  margin: 40px auto 40px 170px;
+  width: 600px;
+}
+
+.OBox {
+  display: inline-block;
+  width: 20px;
+}
+
+.LetterBox {
+  height: 33px;
+  vertical-align: top;
+}
+
+.OBtn {
+  width: 20px;
+  border: 0;
+  margin: 0;
+  background: white;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.OBtnSelected {
+  width: 20px;
+  border: 0;
+  margin: 0;
+  font-weight: bold;
+  background: white;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.OBtn:hover {
+  text-decoration: underline;
+}
+
+.PlaceHolderBtn {
+  width: 65px;
+  height: 1px;
+}
+
+.NextBtn:hover {
+  text-decoration: underline;
+}
+
+.PreviousBtn:hover {
+  text-decoration: underline;
+}
+
+.NextBtn,
+.PreviousBtn {
+  border: 0;
+  margin: 0 0 auto 0;
+  width: 65px;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.OImg {
+  width: 20px;
+}
