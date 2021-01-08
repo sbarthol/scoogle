@@ -3,7 +3,7 @@ import "./Header.css";
 import logo from "../../images/scoogle_logo.png";
 import SearchBox from "../SearchBox";
 
-function Header({ searchBarText, handleSearchBarChange }) {
+function Header({ searchBarText, handleSearchBarChange, onKeyDown }) {
   return (
     <div className="HeaderBox">
       <img src={logo} className="Logo" alt="logo" />
@@ -11,6 +11,7 @@ function Header({ searchBarText, handleSearchBarChange }) {
         <SearchBox
           text={searchBarText}
           handleSearchBarChange={handleSearchBarChange}
+          onKeyDown={onKeyDown}
         />
       </div>
     </div>

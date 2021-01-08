@@ -21,6 +21,17 @@ class App extends React.Component {
 
     this.getSearchResults = this.getSearchResults.bind(this);
     this.handleSearchBarChange = this.handleSearchBarChange.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+  }
+
+  onKeyDown(e) {
+    if (e.key === "Enter") {
+      if (this.state.searchBarText.replace(/\s/g, "").length) {
+        const searchText = this.state.searchBarText;
+        this.setState({ searchText: searchText, selectedPage: 1 });
+        this.getSearchResults(searchText, 1);
+      }
+    }
   }
 
   handleSearchBarChange(e) {
@@ -40,7 +51,6 @@ class App extends React.Component {
         return res.json();
       })
       .then((searchResults) => {
-        console.log(searchResults);
         this.setState({
           links: searchResults.links,
           totalPages: searchResults.totalPages,
@@ -58,6 +68,7 @@ class App extends React.Component {
           <SearchBox
             handleSearchBarChange={this.handleSearchBarChange}
             text={this.state.searchBarText}
+            onKeyDown={this.onKeyDown}
           />
           <div className="buttonBox">
             <Button
@@ -80,6 +91,7 @@ class App extends React.Component {
           <Header
             searchBarText={this.state.searchBarText}
             handleSearchBarChange={this.handleSearchBarChange}
+            onKeyDown={this.onKeyDown}
           />
           <SearchResults links={this.state.links} />
           {this.state.totalPages >= 2 && (
