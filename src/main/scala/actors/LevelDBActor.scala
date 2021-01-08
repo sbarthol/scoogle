@@ -86,7 +86,7 @@ class LevelDBActor(
       val links = linkMap.toList
         .sortBy(-_._2)
         .slice(from = maxLinksPerPage * (pageNumber - 1), until = maxLinksPerPage * pageNumber)
-        .map { case (link, score) =>
+        .map { case (link, _) =>
           val title: String = titleDb.get(link)
           val text: String = textDb.get(link)
 
@@ -102,7 +102,6 @@ class LevelDBActor(
           Item(
             link = link,
             title = title.take(maxTitleLength),
-            score = score,
             text = text.take(maxTextLength),
             cleanLink = cleanLink
           )
@@ -168,7 +167,6 @@ object LevelDBActor {
       cleanLink: String,
       link: String,
       title: String,
-      score: Int,
       text: String
   )
 }
