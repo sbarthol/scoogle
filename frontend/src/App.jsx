@@ -38,6 +38,21 @@ class App extends React.Component {
     this.setState({ searchBarText: e.target.value });
   }
 
+  feelLucky(query) {
+    const apiUrl = `/api?query=${query}&pageNumber=1`;
+
+    fetch(apiUrl)
+      .then((res) => {
+        return res.json();
+      })
+      .then((searchResults) => {
+        if (searchResults.links.length >= 1) {
+          window.location.replace(searchResults.links[0].link);
+        }
+      })
+      .catch(console.log);
+  }
+
   getSearchResults(query, pageNumber) {
     this.setState({
       links: [],
@@ -81,7 +96,16 @@ class App extends React.Component {
                 }
               }}
             />
-            <Button text="I'm Feeling Lucky" />
+            <Button
+              text="I'm Feeling Lucky"
+              onClick={() => {
+                if (this.state.searchBarText.replace(/\s/g, "").length) {
+                  const searchText = this.state.searchBarText;
+                  this.setState({ searchText: searchText });
+                  this.feelLucky(searchText);
+                }
+              }}
+            />
           </div>
         </div>
       );
