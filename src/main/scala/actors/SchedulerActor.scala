@@ -46,6 +46,8 @@ class SchedulerActor(
     throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
   } else if (!urlValidator.isValid(source)) {
     throw new InitializationException(s"link $source not valid")
+  } else if (isBlacklisted(source)) {
+    throw new InitializationException(s"link $source is blacklisted")
   } else if (isDownloading(source)) {
     throw new InitializationException(s"link $source is already being downloaded")
   } else if (!crawlPresentLinks && isInDB(source)) {
@@ -83,26 +85,23 @@ class SchedulerActor(
         val childDistanceToSource =
           distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
 
-        blocking {
+        if (
+          urlValidator.isValid(newLink)
+            && parentDistanceToSource + 1 <= maxDepth
+            && parentDistanceToSource + 1 < childDistanceToSource
+            && !isDownloading(newLink)
+            && !isBlacklisted(newLink)
+            && (crawlPresentLinks || !isInDB(newLink))
+        ) {
+          distanceToSource.put(
+            key = newLink,
+            value = parentDistanceToSource + 1
+          )
+          distanceToSource.apply(newLink)
 
-          if (
-            urlValidator.isValid(newLink)
-              && parentDistanceToSource + 1 <= maxDepth
-              && parentDistanceToSource + 1 < childDistanceToSource
-              && !isDownloading(newLink)
-              && !isBlacklisted(newLink)
-              && (crawlPresentLinks || !isInDB(newLink))
-          ) {
-            distanceToSource.put(
-              key = newLink,
-              value = parentDistanceToSource + 1
-            )
-            distanceToSource.apply(newLink)
-
-            logger.debug(s"Downloading new Link($newLink)")
-            context.parent ! MasterActor.Put(newLink)
-            getterActor ! GetterActor.Link(newLink)
-          }
+          logger.debug(s"Downloading new Link($newLink)")
+          context.parent ! MasterActor.Put(newLink)
+          getterActor ! GetterActor.Link(newLink)
         }
       })
   }

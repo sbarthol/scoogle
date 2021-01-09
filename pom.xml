@@ -34,6 +34,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kamon-bundle_2.13</artifactId>
+            <version>2.1.9</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kamon-prometheus_2.13</artifactId>
+            <version>2.1.9</version>
+        </dependency>
+        <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-http-spray-json_2.13</artifactId>
             <version>10.2.2</version>
