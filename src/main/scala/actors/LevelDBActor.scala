@@ -2,6 +2,7 @@ package actors
 
 import actors.LevelDBActor._
 import akka.actor.{Actor, Props}
+import akka.routing.RoundRobinPool
 import org.fusesource.leveldbjni.JniDBFactory.factory
 import org.iq80.leveldb.Options
 import org.slf4j.LoggerFactory
@@ -40,10 +41,8 @@ class LevelDBActor(
     logger.debug("Database was shut down")
   }
 
-  private val putActor = context.actorOf(
-    props = Props(new PutActor),
-    name = "put"
-  )
+  private val putActorManager =
+    context.actorOf(RoundRobinPool(20).props(Props(new PutActor)), "PutActorManager")
 
   override def receive: Receive = {
 
@@ -53,10 +52,10 @@ class LevelDBActor(
       sender ! inside
 
     case Blacklist(link) =>
-      putActor ! Blacklist(link)
+      putActorManager ! Blacklist(link)
 
     case Put(words, link, text, title) =>
-      putActor ! Put(words, link, text, title)
+      putActorManager ! Put(words, link, text, title)
 
     case Inside(link: String) =>
       val inside = titleDb.get(link) != null
@@ -85,7 +84,10 @@ class LevelDBActor(
       val totalPages = max(1, ceil(linkMap.size / maxLinksPerPage.toDouble).toInt)
       val links = linkMap.toList
         .sortBy(-_._2)
-        .slice(from = maxLinksPerPage * (pageNumber - 1), until = maxLinksPerPage * pageNumber)
+        .slice(
+          from = maxLinksPerPage * (pageNumber - 1),
+          until = maxLinksPerPage * pageNumber
+        )
         .map { case (link, _) =>
           val title: String = titleDb.get(link)
           val text: String = textDb.get(link)
@@ -112,22 +114,42 @@ class LevelDBActor(
 
   private class PutActor extends Actor {
 
+    var textWriteBatch = textDb.createWriteBatch()
+    var titleWriteBatch = titleDb.createWriteBatch()
+    var blacklistWriteBatch = blacklistDb.createWriteBatch()
+    var blacklistCounter = 0
+    var textCounter = 0
+
     override def receive: Receive = {
 
       case Blacklist(link) =>
-        blacklistDb.put(link, "")
+        blacklistWriteBatch.put(link, "")
+        blacklistCounter = (blacklistCounter + 1) % 2000
+        if (blacklistCounter == 0) {
+          blacklistDb.write(blacklistWriteBatch)
+          blacklistWriteBatch = blacklistDb.createWriteBatch()
+        }
 
       case Put(words, link, text, title) =>
         if (textDb.get(link) == null) {
-          textDb.put(link, text)
-          titleDb.put(link, title)
+          titleWriteBatch.put(link, title)
+          textWriteBatch.put(link, text)
+          textCounter = (textCounter + 1) % 2000
+          if (textCounter == 0) {
+            textDb.write(textWriteBatch)
+            titleDb.write(titleWriteBatch)
+            textWriteBatch = textDb.createWriteBatch()
+            titleWriteBatch = titleDb.createWriteBatch()
+          }
+
+          val invertedIndexWriteBatch = invertedIndexDb.createWriteBatch()
 
           words.foreach { case (word, count) =>
             val rawLinks = invertedIndexDb.get(word)
             val links: List[(String, Int)] = if (rawLinks == null) List() else rawLinks
-            invertedIndexDb.put(word, (link, count) :: links)
+            invertedIndexWriteBatch.put(word, (link, count) :: links)
           }
-
+          invertedIndexDb.write(invertedIndexWriteBatch)
           logger.debug(s"Link $link put in database")
         } else {
           logger.debug(s"Link $link already present in the database")
