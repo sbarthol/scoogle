@@ -9,6 +9,8 @@ followed by the server once the webcrawler is stopped.
 
 ## Webcrawler based on *Akka Actors*
 
+### Seed
+
 The webcrawler takes as input the seed in the shape of an XML file. Find below an example of such a file. The different
 fields designate the following:
 
@@ -32,7 +34,7 @@ fields designate the following:
 </sources>
 ```
 
-#
+### Running
 
 Run the `WebCrawler.scala` file with the following command line arguments.
 
@@ -41,6 +43,13 @@ Run the `WebCrawler.scala` file with the following command line arguments.
   this number is too large, the requests will time out. The default is 30.
 - `--sourceFilepath` The filepath of the source file containing the source links.
 - `-h, --help` Show help message.
+
+### Monitoring
+
+The webcrawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping endpoint on ` http://localhost:9095`. A
+Prometheus server can be started in order to view the various Akka metrics.
+
+![prometheus](prometheus.png)
 
 ## Frontend written in *React*
 
