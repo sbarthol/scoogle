@@ -17,7 +17,7 @@ class MasterActor(
 ) extends Actor {
 
   override val supervisorStrategy: OneForOneStrategy =
-    OneForOneStrategy(maxNrOfRetries = 3) {
+    OneForOneStrategy(maxNrOfRetries = 3, loggingEnabled = false) {
       case _: InitializationException => Stop
       case _: DownloadSourceException => Restart
       case _: Exception               => Escalate

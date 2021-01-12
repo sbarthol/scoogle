@@ -42,22 +42,27 @@ class SchedulerActor(
 
   logger.debug(s"Attempt to start new scheduler actor for source: $source")
 
-  if (maxDepth < 0) {
-    throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
-  } else if (!urlValidator.isValid(source)) {
-    throw new InitializationException(s"link $source not valid")
-  } else if (isBlacklisted(source)) {
-    throw new InitializationException(s"link $source is blacklisted")
-  } else if (isDownloading(source)) {
-    throw new InitializationException(s"link $source is already being downloaded")
-  } else if (!crawlPresentLinks && isInDB(source)) {
-    throw new InitializationException(s"link $source is already in the database")
-  } else {
+  try {
+    if (maxDepth < 0) {
+      throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
+    } else if (!urlValidator.isValid(source)) {
+      throw new InitializationException(s"link $source not valid")
+    } else if (isBlacklisted(source)) {
+      throw new InitializationException(s"link $source is blacklisted")
+    } else if (isDownloading(source)) {
+      throw new InitializationException(s"link $source is already being downloaded")
+    } else if (!crawlPresentLinks && isInDB(source)) {
+      throw new InitializationException(s"link $source is already in the database")
+    } else {
 
-    logger.debug(s"Downloading new Link($source)")
-    distanceToSource.put(source, 0)
-    context.parent ! MasterActor.Put(source)
-    getterActor ! GetterActor.Link(source)
+      logger.debug(s"Downloading new Link($source)")
+      distanceToSource.put(source, 0)
+      context.parent ! MasterActor.Put(source)
+      getterActor ! GetterActor.Link(source)
+    }
+  } catch {
+    case e: Throwable =>
+      logger.error(s"Error when initializing a scheduler: ${e.getMessage}")
   }
 
   override def receive: Receive = {
@@ -72,6 +77,7 @@ class SchedulerActor(
       context.parent ! MasterActor.Remove(link)
       val errorDescription = s"Get request for link $link failed: ${error.toString}"
       if (source == link) {
+        logger.warn(s"Failed downloading a source: $errorDescription")
         throw new DownloadSourceException(errorDescription)
       } else {
         context.parent ! MasterActor.Error(link)
