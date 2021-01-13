@@ -10,5 +10,6 @@
         <appender-ref ref="STDOUT" />
     </root>
 
+    <logger name = "Server" level = "DEBUG"/>
     <logger name = "com.ning" level = "WARN" />
 </configuration>
