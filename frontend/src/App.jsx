@@ -6,6 +6,7 @@ import Button from "./components/Button";
 import SearchResults from "./components/SearchResults";
 import Header from "./components/Header";
 import Pagination from "./components/Pagination";
+import NoResults from "./components/NoResults";
 
 class App extends React.Component {
   constructor(props) {
@@ -17,6 +18,7 @@ class App extends React.Component {
       searchBarText: "",
       searchText: "",
       selectedPage: 1,
+      loading: false,
     };
 
     this.getSearchResults = this.getSearchResults.bind(this);
@@ -58,6 +60,7 @@ class App extends React.Component {
       links: [],
       totalPages: 1,
       showHomePage: false,
+      loading: true,
     });
     const apiUrl = `/api?query=${query}&pageNumber=${pageNumber}`;
 
@@ -70,6 +73,7 @@ class App extends React.Component {
           links: searchResults.links,
           totalPages: searchResults.totalPages,
           showHomePage: false,
+          loading: false,
         });
       })
       .catch(console.log);
@@ -109,7 +113,7 @@ class App extends React.Component {
           </div>
         </div>
       );
-    } else {
+    } else if (!this.state.loading && this.state.links.length > 0) {
       return (
         <div>
           <Header
@@ -128,6 +132,27 @@ class App extends React.Component {
               }}
             />
           )}
+        </div>
+      );
+    } else if (!this.state.loading) {
+      return (
+        <div>
+          <Header
+            searchBarText={this.state.searchBarText}
+            handleSearchBarChange={this.handleSearchBarChange}
+            onKeyDown={this.onKeyDown}
+          />
+          <NoResults searchText={this.state.searchText} />
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          <Header
+            searchBarText={this.state.searchBarText}
+            handleSearchBarChange={this.handleSearchBarChange}
+            onKeyDown={this.onKeyDown}
+          />
         </div>
       );
     }
