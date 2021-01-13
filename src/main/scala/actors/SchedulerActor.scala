@@ -89,25 +89,31 @@ class SchedulerActor(
 
         val parentDistanceToSource = distanceToSource(link)
         val childDistanceToSource =
-          distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
+          distanceToSource.synchronized {
+            distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
+          }
 
-        if (
-          urlValidator.isValid(newLink)
+        blocking {
+
+          if (
+            urlValidator.isValid(newLink)
             && parentDistanceToSource + 1 <= maxDepth
             && parentDistanceToSource + 1 < childDistanceToSource
             && !isDownloading(newLink)
             && !isBlacklisted(newLink)
             && (crawlPresentLinks || !isInDB(newLink))
-        ) {
-          distanceToSource.put(
-            key = newLink,
-            value = parentDistanceToSource + 1
-          )
-          distanceToSource.apply(newLink)
+          ) {
+            distanceToSource.synchronized {
+              distanceToSource.put(
+                key = newLink,
+                value = parentDistanceToSource + 1
+              )
+            }
 
-          logger.debug(s"Downloading new Link($newLink)")
-          context.parent ! MasterActor.Put(newLink)
-          getterActor ! GetterActor.Link(newLink)
+            logger.debug(s"Downloading new Link($newLink)")
+            context.parent ! MasterActor.Put(newLink)
+            getterActor ! GetterActor.Link(newLink)
+          }
         }
       })
   }
@@ -115,7 +121,7 @@ class SchedulerActor(
   private def isBlacklisted(link: String): Boolean = {
 
     implicit val ec: ExecutionContext = context.dispatcher
-    val duration = FiniteDuration(5, SECONDS)
+    val duration = FiniteDuration(60, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
       (levelDBActor ? LevelDBActor.IsBlacklisted(link)).mapTo[Boolean]
@@ -132,7 +138,7 @@ class SchedulerActor(
   private def isDownloading(link: String): Boolean = {
 
     implicit val ec: ExecutionContext = context.dispatcher
-    val duration = FiniteDuration(5, SECONDS)
+    val duration = FiniteDuration(60, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
       (context.parent ? MasterActor.Inside(link)).mapTo[Boolean]
@@ -149,7 +155,7 @@ class SchedulerActor(
   private def isInDB(link: String): Boolean = {
 
     implicit val ec: ExecutionContext = context.dispatcher
-    val duration = FiniteDuration(5, SECONDS)
+    val duration = FiniteDuration(60, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
       (levelDBActor ? LevelDBActor.Inside(link)).mapTo[Boolean]
