@@ -44,7 +44,8 @@
 
 .PlaceHolderBtn {
   width: 65px;
-  height: 1px;
+  height: 21px;
+  display: inline-block;
 }
 
 .NextBtn:hover {
