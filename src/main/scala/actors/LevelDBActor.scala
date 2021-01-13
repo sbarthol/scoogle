@@ -2,7 +2,6 @@ package actors
 
 import actors.LevelDBActor._
 import akka.actor.{Actor, Props}
-import akka.routing.RoundRobinPool
 import org.fusesource.leveldbjni.JniDBFactory.factory
 import org.iq80.leveldb.Options
 import org.slf4j.LoggerFactory
@@ -41,8 +40,7 @@ class LevelDBActor(
     logger.debug("Database was shut down")
   }
 
-  private val putActorManager =
-    context.actorOf(RoundRobinPool(20).props(Props(new PutActor)), "PutActorManager")
+  private val putActor = context.actorOf(Props(new PutActor), "put")
 
   override def receive: Receive = {
 
@@ -52,10 +50,10 @@ class LevelDBActor(
       sender ! inside
 
     case Blacklist(link) =>
-      putActorManager ! Blacklist(link)
+      putActor ! Blacklist(link)
 
     case Put(words, link, text, title) =>
-      putActorManager ! Put(words, link, text, title)
+      putActor ! Put(words, link, text, title)
 
     case Inside(link: String) =>
       val inside = titleDb.get(link) != null
@@ -114,33 +112,15 @@ class LevelDBActor(
 
   private class PutActor extends Actor {
 
-    var textWriteBatch = textDb.createWriteBatch()
-    var titleWriteBatch = titleDb.createWriteBatch()
-    var blacklistWriteBatch = blacklistDb.createWriteBatch()
-    var blacklistCounter = 0
-    var textCounter = 0
-
     override def receive: Receive = {
 
       case Blacklist(link) =>
-        blacklistWriteBatch.put(link, "")
-        blacklistCounter = (blacklistCounter + 1) % 2000
-        if (blacklistCounter == 0) {
-          blacklistDb.write(blacklistWriteBatch)
-          blacklistWriteBatch = blacklistDb.createWriteBatch()
-        }
+        blacklistDb.put(link, "")
 
       case Put(words, link, text, title) =>
         if (textDb.get(link) == null) {
-          titleWriteBatch.put(link, title)
-          textWriteBatch.put(link, text)
-          textCounter = (textCounter + 1) % 2000
-          if (textCounter == 0) {
-            textDb.write(textWriteBatch)
-            titleDb.write(titleWriteBatch)
-            textWriteBatch = textDb.createWriteBatch()
-            titleWriteBatch = titleDb.createWriteBatch()
-          }
+          titleDb.put(link, title)
+          textDb.put(link, text)
 
           val invertedIndexWriteBatch = invertedIndexDb.createWriteBatch()
 
