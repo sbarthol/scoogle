@@ -5,7 +5,7 @@ Switzerland. Its components are a webcrawler, a LevelDB key-value store, a serve
 written in React. Since LevelDB does not support two simultaneous processes, it is advised to run the webcrawler first,
 followed by the server once the webcrawler is stopped.
 
-![demo](demo.gif)
+![demo](https://drive.google.com/uc?id=1A-X3PufeiBJ8SwROvygW2IEwrOQnnHvm)
 
 ## Webcrawler based on *Akka Actors*
 
@@ -49,7 +49,7 @@ Run the `WebCrawler.scala` file with the following command line arguments.
 The webcrawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping endpoint on ` http://localhost:9095`. A
 Prometheus server can be started in order to view the various Akka metrics.
 
-![prometheus](prometheus.png)
+![prometheus](https://drive.google.com/uc?id=1mODQzk9y-si5v7h4qNdABI5E6_OChzGv)
 
 ## Frontend written in *React*
 
