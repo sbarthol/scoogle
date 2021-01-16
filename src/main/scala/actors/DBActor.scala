@@ -2,6 +2,7 @@ package actors
 
 import actors.DBActor._
 import akka.actor.{Actor, Props}
+import akka.routing.RoundRobinPool
 import org.slf4j.LoggerFactory
 import utils.HBaseConnection
 
@@ -31,7 +32,9 @@ class DBActor(
     hbaseConn.close()
     logger.debug("Database was shut down")
   }
-  private val putActor = context.actorOf(Props(new PutActor), "put")
+  //private val putActor = context.actorOf(Props(new PutActor), "put")
+  private val putRouter =
+    context.actorOf(RoundRobinPool(2).props(Props(new PutActor)), "putRouter")
 
   override def receive: Receive = {
 
@@ -41,10 +44,10 @@ class DBActor(
       sender ! inside
 
     case Blacklist(link) =>
-      putActor ! Blacklist(link)
+      putRouter ! Blacklist(link)
 
     case Put(words, link, text, title) =>
-      putActor ! Put(words, link, text, title)
+      putRouter ! Put(words, link, text, title)
 
     case Inside(link: String) =>
       val inside = hbaseConn.isInDb(link)
