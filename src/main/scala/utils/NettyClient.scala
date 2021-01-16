@@ -1,4 +1,4 @@
-package client
+package utils
 
 import com.ning.http.client.{AsyncHttpClient, AsyncHttpClientConfig}
 
