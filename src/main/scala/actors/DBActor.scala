@@ -5,10 +5,8 @@ import akka.actor.{Actor, Props}
 import org.slf4j.LoggerFactory
 import utils.HBaseConnection
 
-import java.io._
 import java.net.URI
 import scala.collection.mutable
-import scala.language.implicitConversions
 import scala.math.{ceil, max}
 
 class DBActor(
@@ -24,11 +22,10 @@ class DBActor(
   private val logger = LoggerFactory.getLogger(classOf[DBActor])
 
   private val hbaseConn =
-    HBaseConnection.getConnection(
+    HBaseConnection.init(
       zooKeeperAddress = zooKeeperAddress,
       zooKeeperPort = zooKeeperPort
     )
-  hbaseConn.init()
 
   sys.addShutdownHook {
     hbaseConn.close()
@@ -109,38 +106,15 @@ class DBActor(
     override def receive: Receive = {
 
       case Blacklist(link) =>
-        ???
+        hbaseConn.blacklist(link)
 
       case Put(words, link, text, title) =>
-        if (???) {
-
-          words.foreach { case (word, count) =>
-
-          }
-          logger.debug(s"Link $link put in database")
-        } else {
-          logger.debug(s"Link $link already present in the database")
+        hbaseConn.putWebsite(link = link, text = text, title = title)
+        words.foreach { case (word, count) =>
+          hbaseConn.putWord(link = link, word = word, count = count)
         }
+        logger.debug(s"Link $link put in database")
     }
-  }
-
-  implicit private def serializeString(s: String): Array[Byte] = s.getBytes
-  implicit private def serializeList[A](l: List[A]): Array[Byte] = {
-
-    val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-    val oos = new ObjectOutputStream(stream)
-    oos.writeObject(l)
-    oos.close()
-    stream.toByteArray
-  }
-
-  implicit private def deserializeString(b: Array[Byte]): String = new String(b)
-  implicit private def deserializeList[A](b: Array[Byte]): List[A] = {
-
-    val ois = new ObjectInputStream(new ByteArrayInputStream(b))
-    val value = ois.readObject.asInstanceOf[List[A]]
-    ois.close()
-    value
   }
 }
 

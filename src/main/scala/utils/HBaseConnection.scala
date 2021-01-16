@@ -1,8 +1,7 @@
 package utils
 
 import org.apache.hadoop.hbase.client._
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter
-import org.apache.hadoop.hbase.{CompareOperator, HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
 
 import scala.jdk.CollectionConverters.SeqHasAsJava
@@ -11,7 +10,7 @@ object HBaseConnection {
 
   private val logger = LoggerFactory.getLogger(classOf[HBaseConnection])
 
-  def getConnection(zooKeeperAddress: String, zooKeeperPort: Int): HBaseConnection = {
+  def init(zooKeeperAddress: String, zooKeeperPort: Int): HBaseConnection = {
 
     val config = HBaseConfiguration.create
     config.set("hbase.zookeeper.quorum", zooKeeperAddress)
@@ -20,33 +19,36 @@ object HBaseConnection {
     HBaseAdmin.available(config)
     logger.debug(s"HBase master is available")
 
-    val connection = ConnectionFactory.createConnection(config)
-    val admin = connection.getAdmin
-    new HBaseConnection(connection = connection, admin = admin)
-  }
-}
+    implicit val connection = ConnectionFactory.createConnection(config)
+    implicit val admin = connection.getAdmin
 
-class HBaseConnection private (connection: Connection, admin: Admin) {
-
-  def init(): Unit = {
-
-    createTable(
-      name = "website",
-      families = List("text", "metadata")
+    val websitesTable = createTable(
+      name = "websites",
+      families = List("content", "metadata")
     )
 
-    createTable(
+    val invertedIndexTable = createTable(
       name = "invertedIndex",
       families = List("index")
     )
 
-    createTable(
+    val blacklistTable = createTable(
       name = "blacklist",
-      families = List("link")
+      families = List("blacklisted")
+    )
+
+    new HBaseConnection(
+      connection = connection,
+      invertedIndexTable = invertedIndexTable,
+      blacklistTable = blacklistTable,
+      websitesTable = websitesTable
     )
   }
 
-  private def createTable(name: String, families: List[String]): Unit = {
+  private def createTable(name: String, families: List[String])(implicit
+      admin: Admin,
+      connection: Connection
+  ): Table = {
 
     val tableName = TableName.valueOf(name)
     if (!admin.tableExists(tableName)) {
@@ -64,11 +66,20 @@ class HBaseConnection private (connection: Connection, admin: Admin) {
       HBaseConnection.logger.debug(
         s"Created table $name with families ${families.toString}"
       )
-
     } else {
       HBaseConnection.logger.debug(s"Table $name already exists")
     }
+
+    connection.getTable(tableName)
   }
+}
+
+class HBaseConnection private (
+    connection: Connection,
+    invertedIndexTable: Table,
+    blacklistTable: Table,
+    websitesTable: Table
+) {
 
   def close(): Unit = {
     connection.close()
@@ -76,40 +87,38 @@ class HBaseConnection private (connection: Connection, admin: Admin) {
 
   def isBlacklisted(link: String): Boolean = {
 
-    val blacklistTable = connection.getTable(TableName.valueOf("blacklist"))
-    val filter = new SingleColumnValueFilter(
-      "link".getBytes,
-      Array.empty,
-      CompareOperator.EQUAL,
-      link.getBytes
-    )
-
-    val scan = new Scan()
-    scan.setFilter(filter)
-
-    val scanner = blacklistTable.getScanner(scan)
-    scanner.iterator().hasNext
+    val get = new Get(link.getBytes)
+    get.addColumn("blacklisted".getBytes, "link".getBytes)
+    blacklistTable.exists(get)
   }
 
   def isInDb(link: String): Boolean = {
 
-    val blacklistTable = connection.getTable(TableName.valueOf("websites"))
-    val filter = new SingleColumnValueFilter(
-      "metadata".getBytes,
-      "link".getBytes,
-      CompareOperator.EQUAL,
-      link.getBytes
-    )
-
-    val scan = new Scan()
-    scan.setFilter(filter)
-
-    val scanner = blacklistTable.getScanner(scan)
-    scanner.iterator().hasNext
+    val get = new Get(link.getBytes)
+    get.addColumn("metadata".getBytes, "link".getBytes)
+    websitesTable.exists(get)
   }
 
   def blacklist(link: String): Unit = {
 
+    val put = new Put(link.getBytes)
+    put.addColumn("blacklisted".getBytes, "link".getBytes, Array.empty)
+    blacklistTable.put(put)
+  }
 
+  def putWebsite(link: String, text: String, title: String): Unit = {
+
+    val put = new Put(link.getBytes)
+    put.addColumn("metadata".getBytes, "title".getBytes, title.getBytes)
+    put.addColumn("content".getBytes, "text".getBytes, text.getBytes)
+    websitesTable.put(put)
+  }
+
+  def putWord(link: String, word: String, count: Int): Unit = {
+
+    val put = new Put(link.getBytes)
+    put.addColumn("index".getBytes, "word".getBytes, word.getBytes)
+    put.addColumn("index".getBytes, "count".getBytes, count.toHexString.getBytes)
+    invertedIndexTable.put(put)
   }
 }
