@@ -4,9 +4,9 @@ import actors.MasterActor._
 import actors.SchedulerActor.{DownloadSourceException, InitializationException}
 import akka.actor.SupervisorStrategy.{Escalate, Restart, Stop}
 import akka.actor.{Actor, OneForOneStrategy, Props}
-import client.NettyClient
 import org.slf4j.LoggerFactory
 import source.Source
+import utils.NettyClient
 
 import scala.collection.mutable
 
