@@ -18,7 +18,8 @@ object WebCrawler {
       props = Props(
         new MasterActor(
           sources = sources,
-          databaseDirectory = conf.databaseDirectory.apply(),
+          zooKeeperAddress = conf.zooKeeperAddress.apply(),
+          zooKeeperPort = conf.zooKeeperPort.apply(),
           maxConcurrentSockets = conf.maxConcurrentSockets.apply()
         )
       ),

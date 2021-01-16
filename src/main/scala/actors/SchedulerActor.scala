@@ -27,7 +27,7 @@ class SchedulerActor(
     source: String,
     maxDepth: Int,
     crawlPresentLinks: Boolean,
-    levelDBActor: ActorRef,
+    dbActor: ActorRef,
     getterActor: ActorRef
 ) extends Actor {
 
@@ -36,7 +36,7 @@ class SchedulerActor(
   private val parserActor =
     context.actorOf(
       props = Props(
-        new ParserActor(levelDBActor = levelDBActor)
+        new ParserActor(dbActor = dbActor)
       )
     )
 
@@ -124,7 +124,7 @@ class SchedulerActor(
     val duration = FiniteDuration(60, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
-      (levelDBActor ? LevelDBActor.IsBlacklisted(link)).mapTo[Boolean]
+      (dbActor ? DBActor.IsBlacklisted(link)).mapTo[Boolean]
 
     try {
       Await.result(awaitable = future, atMost = duration)
@@ -158,7 +158,7 @@ class SchedulerActor(
     val duration = FiniteDuration(60, SECONDS)
     implicit val timeout: Timeout = Timeout(duration)
     val future =
-      (levelDBActor ? LevelDBActor.Inside(link)).mapTo[Boolean]
+      (dbActor ? DBActor.Inside(link)).mapTo[Boolean]
 
     try {
       Await.result(awaitable = future, atMost = duration)

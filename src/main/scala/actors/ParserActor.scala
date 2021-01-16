@@ -6,14 +6,14 @@ import org.jsoup.Jsoup
 
 import scala.jdk.CollectionConverters._
 
-class ParserActor(levelDBActor: ActorRef) extends Actor {
+class ParserActor(dbActor: ActorRef) extends Actor {
 
   private val minimumWordLength = 3
 
   override def receive: Receive = { case Body(link, html) =>
     context.parent ! SchedulerActor.NewLinks(link, getLinks(html))
     val text = getText(html)
-    levelDBActor ! LevelDBActor.Put(
+    dbActor ! DBActor.Put(
       words = getWords(text),
       link = link,
       text = text,

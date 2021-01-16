@@ -6,7 +6,7 @@ class WebCrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   banner("""This program is a webcrawler that takes as input list of links as a
       |starting point. It then downloads the links and stores the contents
-      |as well as an inverted index in a LevelDB database.
+      |as well as an inverted index in a HBase store.
       |""".stripMargin)
 
   val maxConcurrentSockets: ScallopOption[Int] = opt[Int](
@@ -28,13 +28,22 @@ class WebCrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     argName = "path"
   )
 
-  val databaseDirectory: ScallopOption[String] = opt[String](
-    name = "databaseDirectory",
+  val zooKeeperAddress: ScallopOption[String] = opt[String](
+    name = "zooKeeperAddress",
     noshort = true,
-    descr = "The directory in which to put the database files. Defaults to ./target.",
-    default = Some("target"),
+    descr = "The address of the ZooKeeper Quorum server. Defaults 'localhost'",
+    default = Some("localhost"),
     validate = _.nonEmpty,
-    argName = "dir"
+    argName = "addr"
+  )
+
+  val zooKeeperPort: ScallopOption[Int] = opt[Int](
+    name = "zooKeeperPort",
+    noshort = true,
+    descr = "The port of the ZooKeeper Quorum server. Defaults '2181'",
+    default = Some(2181),
+    validate = p => { p >= 0 && p <= (1 << 16) },
+    argName = "port"
   )
 
   verify()

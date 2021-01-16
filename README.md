@@ -1,9 +1,10 @@
 # Scoogle
 
 Scoogle is a Search Engine written in Scala and using Akka Actors developed at *Bartholme Labs* in Crissier,
-Switzerland. Its components are a webcrawler, a LevelDB key-value store, a server serving a backend API and a frontend
-written in React. Since LevelDB does not support two simultaneous processes, it is advised to run the webcrawler first,
-followed by the server once the webcrawler is stopped.
+Switzerland. Its components are a webcrawler, a HBase data store, a server serving a backend API and a frontend written
+in React. The HBase master, ZooKeeper and servers need to be started first, either locally or remotely, either on the
+local filesystem or on HDFS. The address and port number of the ZooKeeper Quorum server are given to the Scoogle
+webcrawler and the server.
 
 ![demo](https://drive.google.com/uc?id=1A-X3PufeiBJ8SwROvygW2IEwrOQnnHvm)
 
@@ -46,8 +47,8 @@ Run the `WebCrawler.scala` file with the following command line arguments.
 
 ### Monitoring
 
-The webcrawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping endpoint on ` http://localhost:9095`. A
-Prometheus server can be started in order to view the various Akka metrics.
+The webcrawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping
+endpoint on ` http://localhost:9095`. A Prometheus server can be started in order to view the various Akka metrics.
 
 ![prometheus](https://drive.google.com/uc?id=1mODQzk9y-si5v7h4qNdABI5E6_OChzGv)
 

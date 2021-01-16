@@ -1,10 +1,9 @@
 package actors
 
-import actors.LevelDBActor._
+import actors.DBActor._
 import akka.actor.{Actor, Props}
-import org.fusesource.leveldbjni.JniDBFactory.factory
-import org.iq80.leveldb.Options
 import org.slf4j.LoggerFactory
+import utils.HBaseConnection
 
 import java.io._
 import java.net.URI
@@ -12,8 +11,9 @@ import scala.collection.mutable
 import scala.language.implicitConversions
 import scala.math.{ceil, max}
 
-class LevelDBActor(
-    databaseDirectory: String
+class DBActor(
+    zooKeeperAddress: String,
+    zooKeeperPort: Int
 ) extends Actor {
 
   // Todo: test those numbers
@@ -21,31 +21,25 @@ class LevelDBActor(
   private val maxTitleLength = 50
   private val maxTextLength = 300
 
-  private val logger = LoggerFactory.getLogger(classOf[LevelDBActor])
-  private val options = new Options
-  options.createIfMissing(true)
+  private val logger = LoggerFactory.getLogger(classOf[DBActor])
 
-  private val invertedIndexDb =
-    factory.open(new File(databaseDirectory + "/invertedIndex"), options)
-  private val textDb = factory.open(new File(databaseDirectory + "/text"), options)
-  private val titleDb = factory.open(new File(databaseDirectory + "/title"), options)
-  private val blacklistDb =
-    factory.open(new File(databaseDirectory + "/blacklist"), options)
+  private val hbaseConn =
+    HBaseConnection.getConnection(
+      zooKeeperAddress = zooKeeperAddress,
+      zooKeeperPort = zooKeeperPort
+    )
+  hbaseConn.init()
 
   sys.addShutdownHook {
-    invertedIndexDb.close()
-    textDb.close()
-    titleDb.close()
-    blacklistDb.close()
+    hbaseConn.close()
     logger.debug("Database was shut down")
   }
-
   private val putActor = context.actorOf(Props(new PutActor), "put")
 
   override def receive: Receive = {
 
     case IsBlacklisted(link) =>
-      val inside = blacklistDb.get(link) != null
+      val inside = hbaseConn.isBlacklisted(link)
       logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the blacklist")
       sender ! inside
 
@@ -56,7 +50,7 @@ class LevelDBActor(
       putActor ! Put(words, link, text, title)
 
     case Inside(link: String) =>
-      val inside = titleDb.get(link) != null
+      val inside = hbaseConn.isInDb(link)
       logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the database")
       sender ! inside
 
@@ -65,7 +59,7 @@ class LevelDBActor(
 
       words.foreach(word => {
 
-        val raw = invertedIndexDb.get(word)
+        val raw = ???
         val matchingLinks: List[(String, Int)] = if (raw == null) List() else raw
 
         matchingLinks.foreach { case (link, count) =>
@@ -87,8 +81,8 @@ class LevelDBActor(
           until = maxLinksPerPage * pageNumber
         )
         .map { case (link, _) =>
-          val title: String = titleDb.get(link)
-          val text: String = textDb.get(link)
+          val title: String = ???
+          val text: String = ???
 
           val uri = new URI(link)
           val cleanLink: String = new URI(
@@ -115,21 +109,14 @@ class LevelDBActor(
     override def receive: Receive = {
 
       case Blacklist(link) =>
-        blacklistDb.put(link, "")
+        ???
 
       case Put(words, link, text, title) =>
-        if (textDb.get(link) == null) {
-          titleDb.put(link, title)
-          textDb.put(link, text)
-
-          val invertedIndexWriteBatch = invertedIndexDb.createWriteBatch()
+        if (???) {
 
           words.foreach { case (word, count) =>
-            val rawLinks = invertedIndexDb.get(word)
-            val links: List[(String, Int)] = if (rawLinks == null) List() else rawLinks
-            invertedIndexWriteBatch.put(word, (link, count) :: links)
+
           }
-          invertedIndexDb.write(invertedIndexWriteBatch)
           logger.debug(s"Link $link put in database")
         } else {
           logger.debug(s"Link $link already present in the database")
@@ -157,7 +144,7 @@ class LevelDBActor(
   }
 }
 
-object LevelDBActor {
+object DBActor {
 
   case class Put(words: List[(String, Int)], link: String, text: String, title: String)
   case class Blacklist(link: String)

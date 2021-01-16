@@ -12,7 +12,8 @@ import scala.collection.mutable
 
 class MasterActor(
     sources: List[Source],
-    databaseDirectory: String,
+    zooKeeperAddress: String,
+    zooKeeperPort: Int,
     maxConcurrentSockets: Int
 ) extends Actor {
 
@@ -24,11 +25,11 @@ class MasterActor(
     }
 
   private val downloading = new mutable.HashSet[String]
-  private val levelDBActor = context.actorOf(
+  private val dbActor = context.actorOf(
     props = Props(
-      new LevelDBActor(databaseDirectory = databaseDirectory)
+      new DBActor(zooKeeperAddress = zooKeeperAddress, zooKeeperPort = zooKeeperPort)
     ),
-    name = "levelDB"
+    name = "db"
   )
   private val getterActor =
     context.actorOf(
@@ -57,7 +58,7 @@ class MasterActor(
           source = source.link,
           maxDepth = source.depth,
           crawlPresentLinks = source.crawlPresent,
-          levelDBActor = levelDBActor,
+          dbActor = dbActor,
           getterActor = getterActor
         )
       )
@@ -92,7 +93,7 @@ class MasterActor(
 
     case Error(link) =>
       failed = failed + 1
-      levelDBActor ! LevelDBActor.Blacklist(link)
+      dbActor ! DBActor.Blacklist(link)
   }
 }
 

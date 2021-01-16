@@ -6,10 +6,12 @@
         </encoder>
     </appender>
 
-    <root level = "INFO">
-        <appender-ref ref="STDOUT" />
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name = "Server" level = "DEBUG"/>
-    <logger name = "com.ning" level = "WARN" />
+    <logger name="Server" level="DEBUG"/>
+    <logger name="actors.DBActor" level="DEBUG"/>
+    <logger name="com.ning" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
 </configuration>

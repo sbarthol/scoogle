@@ -1,4 +1,4 @@
-import actors.LevelDBActor
+import actors.DBActor
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -14,11 +14,11 @@ import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.util.{Failure, Success}
 
 object MyJsonProtocol extends DefaultJsonProtocol {
-  implicit val itemFormat: RootJsonFormat[LevelDBActor.Item] = jsonFormat4(
-    LevelDBActor.Item
+  implicit val itemFormat: RootJsonFormat[DBActor.Item] = jsonFormat4(
+    DBActor.Item
   )
-  implicit val responseFormat: RootJsonFormat[LevelDBActor.Response] = jsonFormat2(
-    LevelDBActor.Response
+  implicit val responseFormat: RootJsonFormat[DBActor.Response] = jsonFormat2(
+    DBActor.Response
   )
 }
 
@@ -32,13 +32,14 @@ object Server {
     implicit val system: ActorSystem = ActorSystem("Server")
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    val levelDBActor = system.actorOf(
+    val dbActor = system.actorOf(
       props = Props(
-        new LevelDBActor(
-          databaseDirectory = conf.databaseDirectory.apply()
+        new DBActor(
+          zooKeeperAddress = conf.zooKeeperAddress.apply(),
+          zooKeeperPort = conf.zooKeeperPort.apply()
         )
       ),
-      name = "levelDB"
+      name = "db"
     )
 
     val frontendRoute =
@@ -59,8 +60,8 @@ object Server {
           (query, pageNumber) => {
 
             val keywords = query.split(" ").toList
-            val future = (levelDBActor ? LevelDBActor.GetLinks(keywords, pageNumber))
-              .mapTo[LevelDBActor.Response]
+            val future = (dbActor ? DBActor.GetLinks(keywords, pageNumber))
+              .mapTo[DBActor.Response]
               .map(_.toJson.compactPrint)
 
             onComplete(future) {
