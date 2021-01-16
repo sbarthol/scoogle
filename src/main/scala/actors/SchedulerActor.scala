@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
-import scala.concurrent.{Await, ExecutionContext, blocking}
+import scala.concurrent.{Await, ExecutionContext}
 
 object SchedulerActor {
 
@@ -89,31 +89,21 @@ class SchedulerActor(
 
         val parentDistanceToSource = distanceToSource(link)
         val childDistanceToSource =
-          distanceToSource.synchronized {
-            distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
-          }
+          distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
 
-        blocking {
+        if (
+          urlValidator.isValid(newLink)
+          && parentDistanceToSource + 1 <= maxDepth
+          && parentDistanceToSource + 1 < childDistanceToSource
+        ) {
+          distanceToSource.put(
+            key = newLink,
+            value = parentDistanceToSource + 1
+          )
 
-          if (
-            urlValidator.isValid(newLink)
-            && parentDistanceToSource + 1 <= maxDepth
-            && parentDistanceToSource + 1 < childDistanceToSource
-            && !isDownloading(newLink)
-            && !isBlacklisted(newLink)
-            && (crawlPresentLinks || !isInDB(newLink))
-          ) {
-            distanceToSource.synchronized {
-              distanceToSource.put(
-                key = newLink,
-                value = parentDistanceToSource + 1
-              )
-            }
-
-            logger.debug(s"Downloading new Link($newLink)")
-            context.parent ! MasterActor.Put(newLink)
-            getterActor ! GetterActor.Link(newLink)
-          }
+          logger.debug(s"Downloading new Link($newLink)")
+          context.parent ! MasterActor.Put(newLink)
+          getterActor ! GetterActor.Link(newLink)
         }
       })
   }
