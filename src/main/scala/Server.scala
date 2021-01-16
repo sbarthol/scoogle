@@ -23,7 +23,7 @@ object Server {
       name = "db"
     )
 
-    HttpServer.createRoutes(levelDBActor = levelDBActor, port = conf.port.apply())
+    HttpServer.startServer(dbActor = dbActor, port = conf.port.apply())
   }
 
   private class Server

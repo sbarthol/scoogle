@@ -1,13 +1,13 @@
 package utils
 
-import actors.LevelDBActor
+import actors.DBActor
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object JsonProtocol extends DefaultJsonProtocol {
-  implicit val itemFormat: RootJsonFormat[LevelDBActor.Item] = jsonFormat4(
-    LevelDBActor.Item
+  implicit val itemFormat: RootJsonFormat[DBActor.Item] = jsonFormat4(
+    DBActor.Item
   )
-  implicit val responseFormat: RootJsonFormat[LevelDBActor.Response] = jsonFormat2(
-    LevelDBActor.Response
+  implicit val responseFormat: RootJsonFormat[DBActor.Response] = jsonFormat2(
+    DBActor.Response
   )
 }

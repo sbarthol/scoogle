@@ -1,6 +1,6 @@
 package utils
 
-import actors.LevelDBActor
+import actors.DBActor
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Server
@@ -19,14 +19,14 @@ import scala.util.{Failure, Success}
 
 object HttpServer {
 
-  private val logger = LoggerFactory.getLogger(classOf[HttpRouter])
+  private val logger = LoggerFactory.getLogger(classOf[HttpServer])
 
-  def createRoutes(levelDBActor: ActorRef, port: Int)(implicit
+  def startServer(dbActor: ActorRef, port: Int)(implicit
       ec: ExecutionContext,
       system: ActorSystem
   ): Unit = {
 
-    val apiRoute = getApiRoute(levelDBActor)
+    val apiRoute = getApiRoute(dbActor)
     val frontendRoute = getFrontendRoute
 
     val bindingFuture =
@@ -49,7 +49,7 @@ object HttpServer {
   }
 
   private def getApiRoute(
-      levelDBActor: ActorRef
+      dbActor: ActorRef
   )(implicit ec: ExecutionContext): Route = {
 
     path("api") {
@@ -62,8 +62,8 @@ object HttpServer {
           (query, pageNumber) => {
 
             val keywords = query.split(" ").toList
-            val future = (levelDBActor ? LevelDBActor.GetLinks(keywords, pageNumber))
-              .mapTo[LevelDBActor.Response]
+            val future = (dbActor ? DBActor.GetLinks(keywords, pageNumber))
+              .mapTo[DBActor.Response]
               .map(_.toJson.compactPrint)
 
             onComplete(future) {
@@ -84,5 +84,5 @@ object HttpServer {
     }
   }
 
-  private class HttpRouter
+  private class HttpServer
 }
