@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import utils.HBaseConnection
 
 import java.net.URI
+import java.security.MessageDigest
 import scala.math.{ceil, max}
 
 class DBActor(
@@ -34,27 +35,32 @@ class DBActor(
   override def receive: Receive = {
 
     case Put(words, link, text, title) =>
-      hbaseConn.putWebsite(link = link, text = text, title = title)
-      hbaseConn.putWords(link = link, words = words)
+
+      val hash = MessageDigest.getInstance("SHA-256")
+        .digest(text.getBytes("UTF-8"))
+        .map("%02x".format(_)).mkString
+
+      hbaseConn.putWebsite(link = link, text = text, title = title,hash = hash)
+      hbaseConn.putWords(hash = hash, words = words)
       logger.debug(s"Link $link put in database")
 
     case GetLinks(words: List[String], pageNumber) =>
-      val links = hbaseConn
-        .getLinks(words)
-        .groupMapReduce { case (link, _) => link } { case (_, count) => count }(_ + _)
+      val hashes = hbaseConn
+        .getHashes(words)
+        .groupMapReduce { case (hash, _) => hash } { case (_, count) => count }(_ + _)
         .toList
         .sortBy { case (_, count) => -count }
 
-      logger.debug(s"Found a total of ${links.size} links")
-      val totalPages = max(1, ceil(links.size / maxLinksPerPage.toDouble).toInt)
+      logger.debug(s"Found a total of ${hashes.size} links")
+      val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
 
-      val slice = links
+      val slice = hashes
         .slice(
           from = maxLinksPerPage * (pageNumber - 1),
           until = maxLinksPerPage * pageNumber
         )
-        .map { case (link, _) =>
-          val (title, text) = hbaseConn.getWebsite(link)
+        .map { case (hash, _) =>
+          val (title, text, link) = hbaseConn.getWebsite(hash = hash)
           val uri = new URI(link)
           val cleanLink: String = new URI(
             uri.getScheme,

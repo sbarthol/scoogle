@@ -1,8 +1,8 @@
 package utils
 
 import org.apache.hadoop.hbase.client._
-import org.apache.hadoop.hbase.filter.{Filter, FilterList, SingleColumnValueExcludeFilter}
-import org.apache.hadoop.hbase.{CellUtil, CompareOperator, HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.filter.{Filter, FilterList, PrefixFilter}
+import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
 import utils.HBaseConnection.logger
 
@@ -80,60 +80,55 @@ class HBaseConnection private (
     connection.close()
   }
 
-  def getWebsite(link: String): (String, String) = {
+  def getWebsite(hash: String): (String, String, String) = {
 
-    val getTitle = new Get(link.getBytes)
+    val getTitle = new Get(hash.getBytes)
     getTitle.addColumn("metadata".getBytes, "title".getBytes)
-    val title = new String(CellUtil.cloneValue(websitesTable.get(getTitle).rawCells().head))
+    val title = new String(
+      CellUtil.cloneValue(websitesTable.get(getTitle).rawCells().head)
+    )
 
-    val getText = new Get(link.getBytes)
+    val getText = new Get(hash.getBytes)
     getText.addColumn("content".getBytes, "text".getBytes)
     val text = new String(CellUtil.cloneValue(websitesTable.get(getText).rawCells().head))
 
-    (title, text)
+    val getLink = new Get(hash.getBytes)
+    getLink.addColumn("metadata".getBytes, "link".getBytes)
+    val link = new String(CellUtil.cloneValue(websitesTable.get(getLink).rawCells().head))
+
+    (title, text, link)
   }
 
-  def putWebsite(link: String, text: String, title: String): Unit = {
+  def putWebsite(hash: String, link: String, text: String, title: String): Unit = {
 
-    val put = new Put(link.getBytes)
+    val put = new Put(hash.getBytes)
     put.addColumn("metadata".getBytes, "title".getBytes, title.getBytes)
     put.addColumn("content".getBytes, "text".getBytes, text.getBytes)
+    put.addColumn("metadata".getBytes, "link".getBytes, link.getBytes)
     websitesTable.put(put)
   }
 
-  def putWords(link: String, words: List[(String, Int)]): Unit = {
+  def putWords(hash: String, words: List[(String, Int)]): Unit = {
 
     invertedIndexTable.put(words.map { case (word, count) =>
-      val put = new Put(link.getBytes)
-      put.addColumn("index".getBytes, "word".getBytes, word.getBytes)
+      val put = new Put(s"${word}_$hash".getBytes)
       put.addColumn("index".getBytes, "count".getBytes, count.toHexString.getBytes)
       put
     }.asJava)
   }
 
-  def getLinks(words: List[String]): List[(String, Int)] = {
-
-    // Todo: word_<hash> as row key ???
+  def getHashes(words: List[String]): List[(String, Int)] = {
 
     val scan = new Scan()
     val filterList = new FilterList(FilterList.Operator.MUST_PASS_ONE)
 
     filterList.addFilter(
       words
-        .map(word => {
-
-          new SingleColumnValueExcludeFilter(
-            "index".getBytes,
-            "word".getBytes,
-            CompareOperator.EQUAL,
-            word.getBytes
-          ).asInstanceOf[Filter]
-
-        })
+        .map(word => new PrefixFilter(word.getBytes).asInstanceOf[Filter])
         .asJava
     )
+
     scan.setFilter(filterList)
-    scan.addColumn("index".getBytes, "count".getBytes)
     val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
 
     logger.debug(
@@ -143,12 +138,12 @@ class HBaseConnection private (
 
     val links = rows.map(row => {
 
-      val link = new String(row.getRow)
+      val List(word, hash) = new String(row.getRow).split("_").toList
       val count =
         Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
 
-      //logger.debug(s"One of the words is contained $count times in link $link")
-      (link, count)
+      logger.debug(s"Word $word is contained $count times in hash $hash")
+      (hash, count)
     })
 
     links
