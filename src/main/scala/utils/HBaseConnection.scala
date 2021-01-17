@@ -1,7 +1,6 @@
 package utils
 
 import org.apache.hadoop.hbase.client._
-import org.apache.hadoop.hbase.filter.{Filter, FilterList, PrefixFilter}
 import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
 import utils.HBaseConnection.logger
@@ -119,33 +118,28 @@ class HBaseConnection private (
 
   def getHashes(words: List[String]): List[(String, Int)] = {
 
-    val scan = new Scan()
-    val filterList = new FilterList(FilterList.Operator.MUST_PASS_ONE)
+    words.flatMap(word => {
 
-    filterList.addFilter(
-      words
-        .map(word => new PrefixFilter((word + "_").getBytes).asInstanceOf[Filter])
-        .asJava
-    )
+      val scan = new Scan()
+      scan.setRowPrefixFilter((word + "_").getBytes)
+      val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
 
-    scan.setFilter(filterList)
-    val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
+      logger.debug(
+        s"""Found ${rows.size} links
+           |for request word = $word""".stripMargin
+      )
 
-    logger.debug(
-      s"""Found ${rows.size} links
-         |for request words = ${words.toString}""".stripMargin
-    )
+      val links = rows.map(row => {
 
-    val links = rows.map(row => {
+        val List(word, hash) = new String(row.getRow).split("_").toList
+        val count =
+          Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
 
-      val List(word, hash) = new String(row.getRow).split("_").toList
-      val count =
-        Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
+        logger.debug(s"Word $word is contained $count times in hash $hash")
+        (hash, count)
+      })
 
-      logger.debug(s"Word $word is contained $count times in hash $hash")
-      (hash, count)
+      links
     })
-
-    links
   }
 }
