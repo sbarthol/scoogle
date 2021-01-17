@@ -113,9 +113,7 @@ class DBActor(
 
       case Put(words, link, text, title) =>
         hbaseConn.putWebsite(link = link, text = text, title = title)
-        words.foreach { case (word, count) =>
-          hbaseConn.putWord(link = link, word = word, count = count)
-        }
+        hbaseConn.putWords(link = link, words = words)
         logger.debug(s"Link $link put in database")
     }
   }

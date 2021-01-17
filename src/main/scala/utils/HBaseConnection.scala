@@ -114,11 +114,14 @@ class HBaseConnection private (
     websitesTable.put(put)
   }
 
-  def putWord(link: String, word: String, count: Int): Unit = {
+  def putWords(link: String, words: List[(String, Int)]): Unit = {
 
-    val put = new Put(link.getBytes)
-    put.addColumn("index".getBytes, "word".getBytes, word.getBytes)
-    put.addColumn("index".getBytes, "count".getBytes, count.toHexString.getBytes)
-    invertedIndexTable.put(put)
+    invertedIndexTable.put(words.map {
+      case (word, count) =>
+        val put = new Put(link.getBytes)
+        put.addColumn("index".getBytes, "word".getBytes, word.getBytes)
+        put.addColumn("index".getBytes, "count".getBytes, count.toHexString.getBytes)
+        put
+    }.asJava)
   }
 }
