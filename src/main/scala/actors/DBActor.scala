@@ -32,6 +32,18 @@ class DBActor(
     logger.debug("Database was shut down")
   }
 
+  private def cleanLink(link: String): String = {
+
+    val uri = new URI(link)
+    new URI(
+      uri.getScheme,
+      uri.getAuthority,
+      uri.getPath,
+      null,
+      uri.getFragment
+    ).toString
+  }
+
   override def receive: Receive = {
 
     case Put(words, link, text, title) =>
@@ -61,20 +73,12 @@ class DBActor(
         )
         .map { case (hash, _) =>
           val (title, text, link) = hbaseConn.getWebsite(hash = hash)
-          val uri = new URI(link)
-          val cleanLink: String = new URI(
-            uri.getScheme,
-            uri.getAuthority,
-            uri.getPath,
-            null,
-            uri.getFragment
-          ).toString
 
           Item(
             link = link,
             title = title.take(maxTitleLength),
             text = text.take(maxTextLength),
-            cleanLink = cleanLink
+            cleanLink = cleanLink(link)
           )
         }
 
