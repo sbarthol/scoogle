@@ -62,7 +62,7 @@ object HttpServer {
 
           (query, pageNumber) => {
 
-            val keywords = query.split(" ").toList
+            val keywords = query.trim.split("\\s+").toList
             val future = (dbActor ? DBActor.GetLinks(keywords, pageNumber))
               .mapTo[DBActor.Response]
               .map(_.toJson.compactPrint)
