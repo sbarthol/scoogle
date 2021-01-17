@@ -60,7 +60,7 @@ class DBActor(
     case GetLinks(words: List[String], pageNumber) =>
       val hashes = hbaseConn
         .getHashes(words)
-        .groupMapReduce { case (hash, _) => hash } { case (_, count) => count }(_ + _)
+        .groupMapReduce { case (hash, _) => hash } { case (_, count) => count }(Math.min)
         .toList
         .sortBy { case (_, count) => -count }
 
