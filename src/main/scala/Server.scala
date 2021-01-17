@@ -13,7 +13,7 @@ object Server {
     implicit val system: ActorSystem = ActorSystem("Server")
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    val dbActor = system.actorOf(
+    implicit val dbActor = system.actorOf(
       props = Props(
         new DBActor(
           zooKeeperAddress = conf.zooKeeperAddress.apply(),
@@ -23,7 +23,7 @@ object Server {
       name = "db"
     )
 
-    HttpServer.startServer(dbActor = dbActor, port = conf.port.apply())
+    HttpServer.startServer(port = conf.port.apply())
   }
 
   private class Server

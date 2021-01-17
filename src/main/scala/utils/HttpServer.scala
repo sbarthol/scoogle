@@ -21,9 +21,10 @@ object HttpServer {
 
   private val logger = LoggerFactory.getLogger(classOf[HttpServer])
 
-  def startServer(dbActor: ActorRef, port: Int)(implicit
+  def startServer(port: Int)(implicit
       ec: ExecutionContext,
-      system: ActorSystem
+      system: ActorSystem,
+      dbActor: ActorRef
   ): Unit = {
 
     val apiRoute = getApiRoute(dbActor)
