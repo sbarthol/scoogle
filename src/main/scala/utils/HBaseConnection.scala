@@ -1,10 +1,12 @@
 package utils
 
 import org.apache.hadoop.hbase.client._
-import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.filter.{Filter, FilterList, SingleColumnValueExcludeFilter}
+import org.apache.hadoop.hbase.{CellUtil, CompareOperator, HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
+import utils.HBaseConnection.logger
 
-import scala.jdk.CollectionConverters.SeqHasAsJava
+import scala.jdk.CollectionConverters.{IteratorHasAsScala, SeqHasAsJava}
 
 object HBaseConnection {
 
@@ -32,15 +34,9 @@ object HBaseConnection {
       families = List("index")
     )
 
-    val blacklistTable = createTable(
-      name = "blacklist",
-      families = List("blacklisted")
-    )
-
     new HBaseConnection(
       connection = connection,
       invertedIndexTable = invertedIndexTable,
-      blacklistTable = blacklistTable,
       websitesTable = websitesTable
     )
   }
@@ -77,7 +73,6 @@ object HBaseConnection {
 class HBaseConnection private (
     connection: Connection,
     invertedIndexTable: Table,
-    blacklistTable: Table,
     websitesTable: Table
 ) {
 
@@ -85,25 +80,17 @@ class HBaseConnection private (
     connection.close()
   }
 
-  def isBlacklisted(link: String): Boolean = {
+  def getWebsite(link: String): (String, String) = {
 
-    val get = new Get(link.getBytes)
-    get.addColumn("blacklisted".getBytes, "link".getBytes)
-    blacklistTable.exists(get)
-  }
+    val getTitle = new Get(link.getBytes)
+    getTitle.addColumn("metadata".getBytes, "title".getBytes)
+    val title = new String(CellUtil.cloneValue(websitesTable.get(getTitle).rawCells().head))
 
-  def isInDb(link: String): Boolean = {
+    val getText = new Get(link.getBytes)
+    getText.addColumn("content".getBytes, "text".getBytes)
+    val text = new String(CellUtil.cloneValue(websitesTable.get(getText).rawCells().head))
 
-    val get = new Get(link.getBytes)
-    get.addColumn("metadata".getBytes, "link".getBytes)
-    websitesTable.exists(get)
-  }
-
-  def blacklist(link: String): Unit = {
-
-    val put = new Put(link.getBytes)
-    put.addColumn("blacklisted".getBytes, "link".getBytes, Array.empty)
-    blacklistTable.put(put)
+    (title, text)
   }
 
   def putWebsite(link: String, text: String, title: String): Unit = {
@@ -116,12 +103,54 @@ class HBaseConnection private (
 
   def putWords(link: String, words: List[(String, Int)]): Unit = {
 
-    invertedIndexTable.put(words.map {
-      case (word, count) =>
-        val put = new Put(link.getBytes)
-        put.addColumn("index".getBytes, "word".getBytes, word.getBytes)
-        put.addColumn("index".getBytes, "count".getBytes, count.toHexString.getBytes)
-        put
+    invertedIndexTable.put(words.map { case (word, count) =>
+      val put = new Put(link.getBytes)
+      put.addColumn("index".getBytes, "word".getBytes, word.getBytes)
+      put.addColumn("index".getBytes, "count".getBytes, count.toHexString.getBytes)
+      put
     }.asJava)
+  }
+
+  def getLinks(words: List[String]): List[(String, Int)] = {
+
+    // Todo: word_<hash> as row key ???
+
+    val scan = new Scan()
+    val filterList = new FilterList(FilterList.Operator.MUST_PASS_ONE)
+
+    filterList.addFilter(
+      words
+        .map(word => {
+
+          new SingleColumnValueExcludeFilter(
+            "index".getBytes,
+            "word".getBytes,
+            CompareOperator.EQUAL,
+            word.getBytes
+          ).asInstanceOf[Filter]
+
+        })
+        .asJava
+    )
+    scan.setFilter(filterList)
+    scan.addColumn("index".getBytes, "count".getBytes)
+    val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
+
+    logger.debug(
+      s"""Found ${rows.size} links
+         |for request words = ${words.toString}""".stripMargin
+    )
+
+    val links = rows.map(row => {
+
+      val link = new String(row.getRow)
+      val count =
+        Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
+
+      //logger.debug(s"One of the words is contained $count times in link $link")
+      (link, count)
+    })
+
+    links
   }
 }

@@ -1,13 +1,11 @@
 package actors
 
 import actors.DBActor._
-import akka.actor.{Actor, Props}
-import akka.routing.RoundRobinPool
+import akka.actor.Actor
 import org.slf4j.LoggerFactory
 import utils.HBaseConnection
 
 import java.net.URI
-import scala.collection.mutable
 import scala.math.{ceil, max}
 
 class DBActor(
@@ -32,58 +30,31 @@ class DBActor(
     hbaseConn.close()
     logger.debug("Database was shut down")
   }
-  //private val putActor = context.actorOf(Props(new PutActor), "put")
-  private val putRouter =
-    context.actorOf(RoundRobinPool(2).props(Props(new PutActor)), "putRouter")
 
   override def receive: Receive = {
 
-    case IsBlacklisted(link) =>
-      val inside = hbaseConn.isBlacklisted(link)
-      logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the blacklist")
-      sender ! inside
-
-    case Blacklist(link) =>
-      putRouter ! Blacklist(link)
-
     case Put(words, link, text, title) =>
-      putRouter ! Put(words, link, text, title)
-
-    case Inside(link: String) =>
-      val inside = hbaseConn.isInDb(link)
-      logger.debug(s"Link $link is ${if (inside) "" else "not "}inside the database")
-      sender ! inside
+      hbaseConn.putWebsite(link = link, text = text, title = title)
+      hbaseConn.putWords(link = link, words = words)
+      logger.debug(s"Link $link put in database")
 
     case GetLinks(words: List[String], pageNumber) =>
-      val linkMap = mutable.HashMap[String, Int]()
+      val links = hbaseConn
+        .getLinks(words)
+        .groupMapReduce { case (link, _) => link } { case (_, count) => count }(_ + _)
+        .toList
+        .sortBy { case (_, count) => -count }
 
-      words.foreach(word => {
+      logger.debug(s"Found a total of ${links.size} links")
+      val totalPages = max(1, ceil(links.size / maxLinksPerPage.toDouble).toInt)
 
-        val raw = ???
-        val matchingLinks: List[(String, Int)] = if (raw == null) List() else raw
-
-        matchingLinks.foreach { case (link, count) =>
-          logger.debug(s"The word $word is contained $count times in link $link")
-          linkMap.put(
-            key = link,
-            value = linkMap.getOrElse(key = link, default = 0) + count
-          )
-        }
-      })
-
-      logger.debug(s"Found a total of ${linkMap.size} links")
-
-      val totalPages = max(1, ceil(linkMap.size / maxLinksPerPage.toDouble).toInt)
-      val links = linkMap.toList
-        .sortBy(-_._2)
+      val slice = links
         .slice(
           from = maxLinksPerPage * (pageNumber - 1),
           until = maxLinksPerPage * pageNumber
         )
         .map { case (link, _) =>
-          val title: String = ???
-          val text: String = ???
-
+          val (title, text) = hbaseConn.getWebsite(link)
           val uri = new URI(link)
           val cleanLink: String = new URI(
             uri.getScheme,
@@ -101,30 +72,13 @@ class DBActor(
           )
         }
 
-      sender ! Response(links = links, totalPages = totalPages)
-  }
-
-  private class PutActor extends Actor {
-
-    override def receive: Receive = {
-
-      case Blacklist(link) =>
-        hbaseConn.blacklist(link)
-
-      case Put(words, link, text, title) =>
-        hbaseConn.putWebsite(link = link, text = text, title = title)
-        hbaseConn.putWords(link = link, words = words)
-        logger.debug(s"Link $link put in database")
-    }
+      sender ! Response(links = slice, totalPages = totalPages)
   }
 }
 
 object DBActor {
 
   case class Put(words: List[(String, Int)], link: String, text: String, title: String)
-  case class Blacklist(link: String)
-  case class IsBlacklisted(link: String)
-  case class Inside(link: String)
   case class Response(links: List[Item], totalPages: Int)
   case class GetLinks(words: List[String], pageNumber: Int)
   case class Item(

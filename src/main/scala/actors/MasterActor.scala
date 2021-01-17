@@ -93,7 +93,6 @@ class MasterActor(
 
     case Error(link) =>
       failed = failed + 1
-      dbActor ! DBActor.Blacklist(link)
   }
 }
 
