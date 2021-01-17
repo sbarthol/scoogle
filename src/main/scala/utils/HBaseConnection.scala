@@ -124,7 +124,7 @@ class HBaseConnection private (
 
     filterList.addFilter(
       words
-        .map(word => new PrefixFilter(word.getBytes).asInstanceOf[Filter])
+        .map(word => new PrefixFilter((word + "_").getBytes).asInstanceOf[Filter])
         .asJava
     )
 
