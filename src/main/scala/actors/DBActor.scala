@@ -47,12 +47,13 @@ class DBActor(
   override def receive: Receive = {
 
     case Put(words, link, text, title) =>
-
-      val hash = MessageDigest.getInstance("SHA-256")
+      val hash = MessageDigest
+        .getInstance("SHA-256")
         .digest(text.getBytes("UTF-8"))
-        .map("%02x".format(_)).mkString
+        .map("%02x".format(_))
+        .mkString
 
-      hbaseConn.putWebsite(link = link, text = text, title = title,hash = hash)
+      hbaseConn.putWebsite(link = link, text = text, title = title, hash = hash)
       hbaseConn.putWords(hash = hash, words = words)
       logger.debug(s"Link $link put in database")
 
