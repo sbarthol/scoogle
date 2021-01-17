@@ -10,9 +10,9 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="utils.HttpServer" level="WARN"/>
+    <logger name="utils.HttpServer" level="DEBUG"/>
     <logger name="actors.SchedulerActor" level="ERROR"/>
-    <logger name="utils.HBaseConnection" level="DEBUG"/>
+    <logger name="utils.HBaseConnection" level="INFO"/>
     <logger name="actors.DBActor" level="INFO"/>
     <logger name="com.ning" level="WARN"/>
     <logger name="org.apache" level="WARN"/>

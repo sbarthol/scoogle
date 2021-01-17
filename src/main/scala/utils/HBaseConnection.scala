@@ -18,7 +18,7 @@ object HBaseConnection {
     config.setInt("hbase.zookeeper.property.clientPort", zooKeeperPort)
 
     HBaseAdmin.available(config)
-    logger.debug(s"HBase master is available")
+    logger.info(s"HBase master is available")
 
     implicit val connection = ConnectionFactory.createConnection(config)
     implicit val admin = connection.getAdmin
@@ -58,11 +58,11 @@ object HBaseConnection {
           .build()
       admin.createTable(table)
 
-      HBaseConnection.logger.debug(
+      HBaseConnection.logger.info(
         s"Created table $name with families ${families.toString}"
       )
     } else {
-      HBaseConnection.logger.debug(s"Table $name already exists")
+      HBaseConnection.logger.info(s"Table $name already exists")
     }
 
     connection.getTable(tableName)
