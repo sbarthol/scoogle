@@ -32,18 +32,6 @@ class DBActor(
     logger.debug("Database was shut down")
   }
 
-  private def cleanLink(link: String): String = {
-
-    val uri = new URI(link)
-    new URI(
-      uri.getScheme,
-      uri.getAuthority,
-      uri.getPath,
-      null,
-      uri.getFragment
-    ).toString
-  }
-
   override def receive: Receive = {
 
     case Put(words, link, text, title) =>
@@ -60,7 +48,9 @@ class DBActor(
     case GetLinks(words: List[String], pageNumber) =>
       val hashes = hbaseConn
         .getHashes(words)
-        .groupMapReduce { case (hash, _) => hash } { case (_, count) => count }(Math.min)
+        .groupMap { case (hash, _) => hash } { case (_, count) => count }
+        .view
+        .mapValues(l => if (l.size < words.size) 0 else l.min)
         .toList
         .sortBy { case (_, count) => -count }
 
@@ -84,6 +74,18 @@ class DBActor(
         }
 
       sender ! Response(links = slice, totalPages = totalPages)
+  }
+
+  private def cleanLink(link: String): String = {
+
+    val uri = new URI(link)
+    new URI(
+      uri.getScheme,
+      uri.getAuthority,
+      uri.getPath,
+      null,
+      uri.getFragment
+    ).toString
   }
 }
 
