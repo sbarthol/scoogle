@@ -14,7 +14,8 @@ class MasterActor(
     zooKeeperAddress: String,
     zooKeeperPort: Int,
     maxConcurrentSockets: Int
-) extends Actor with ActorLogging {
+) extends Actor
+    with ActorLogging {
 
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 3, loggingEnabled = false) {

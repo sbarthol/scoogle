@@ -24,7 +24,8 @@ class SchedulerActor(
     crawlPresentLinks: Boolean,
     dbActor: ActorRef,
     getterActor: ActorRef
-) extends Actor with ActorLogging {
+) extends Actor
+    with ActorLogging {
 
   private val distanceToSource = new mutable.HashMap[String, Int]
   private val parserActor =
