@@ -39,7 +39,8 @@ fields designate the following:
 
 Run the `WebCrawler.scala` file with the following command line arguments.
 
-- `--databaseDirectory` The directory in which to put the database files. Defaults to *./target*.
+- `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
+- `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
 - `--maxConcurrentSockets` The maximum number of TCP sockets that the program will open simultaneously. Sometimes if
   this number is too large, the requests will time out. The default is 30.
 - `--sourceFilepath` The filepath of the source file containing the source links.
@@ -74,5 +75,6 @@ An *Akka HTTP* server runs and serves the following routes:
 Run the `Server.scala` file with the following command line arguments.
 
 - `--port` The port number on which the server listens.
-- `--databaseDirectory` The directory containing the database files. Defaults to *./target*.
+- `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
+- `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
 - `-h, --help` Show help message.
