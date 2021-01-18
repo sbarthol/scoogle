@@ -1,15 +1,12 @@
 package actors
 
 import actors.MonitorActor.Status
-import akka.actor.Actor
-import org.slf4j.LoggerFactory
+import akka.actor.{Actor, ActorLogging}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
-class MonitorActor extends Actor {
-
-  private val logger = LoggerFactory.getLogger(classOf[MonitorActor])
+class MonitorActor extends Actor with ActorLogging {
 
   private val duration = FiniteDuration(3, SECONDS)
   private implicit val ec: ExecutionContextExecutor = context.dispatcher
@@ -21,7 +18,7 @@ class MonitorActor extends Actor {
   )
 
   override def receive: Receive = { case Status(downloading, completed, failed) =>
-    logger.info(
+    log.info(
       s"\nDownloading: $downloading\nCompleted Downloads: $completed\nFailed Downloads: $failed"
     )
   }

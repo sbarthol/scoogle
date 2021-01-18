@@ -1,9 +1,8 @@
 package actors
 
 import actors.SchedulerActor._
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import org.apache.commons.validator.routines.UrlValidator
-import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 
@@ -25,9 +24,8 @@ class SchedulerActor(
     crawlPresentLinks: Boolean,
     dbActor: ActorRef,
     getterActor: ActorRef
-) extends Actor {
+) extends Actor with ActorLogging {
 
-  private val logger = LoggerFactory.getLogger(classOf[SchedulerActor])
   private val distanceToSource = new mutable.HashMap[String, Int]
   private val parserActor =
     context.actorOf(
@@ -36,7 +34,7 @@ class SchedulerActor(
       )
     )
 
-  logger.debug(s"Attempt to start new scheduler actor for source: $source")
+  log.debug(s"Attempt to start new scheduler actor for source: $source")
 
   try {
     if (maxDepth < 0) {
@@ -45,20 +43,20 @@ class SchedulerActor(
       throw new InitializationException(s"link $source not valid")
     } else {
 
-      logger.debug(s"Downloading new Link($source)")
+      log.debug(s"Downloading new Link($source)")
       distanceToSource.put(source, 0)
       context.parent ! MasterActor.Put(source)
       getterActor ! GetterActor.Link(source)
     }
   } catch {
     case e: Throwable =>
-      logger.error(s"Error when initializing a scheduler: ${e.getMessage}")
+      log.error(s"Error when initializing a scheduler: ${e.getMessage}")
   }
 
   override def receive: Receive = {
 
     case SchedulerActor.Done(link, body) =>
-      logger.debug(s"Received Done($link)")
+      log.debug(s"Received Done($link)")
       context.parent ! MasterActor.Remove(link)
       context.parent ! MasterActor.Increment
       parserActor ! ParserActor.Body(link, body)
@@ -67,11 +65,11 @@ class SchedulerActor(
       context.parent ! MasterActor.Remove(link)
       val errorDescription = s"Get request for link $link failed: ${error.toString}"
       if (source == link) {
-        logger.warn(s"Failed downloading a source: $errorDescription")
+        log.warning(s"Failed downloading a source: $errorDescription")
         throw new DownloadSourceException(errorDescription)
       } else {
         context.parent ! MasterActor.Error(link)
-        logger.warn(errorDescription)
+        log.warning(errorDescription)
       }
 
     case NewLinks(link, newLinks) =>
@@ -91,7 +89,7 @@ class SchedulerActor(
             value = parentDistanceToSource + 1
           )
 
-          logger.debug(s"Downloading new Link($newLink)")
+          log.debug(s"Downloading new Link($newLink)")
           context.parent ! MasterActor.Put(newLink)
           getterActor ! GetterActor.Link(newLink)
         }

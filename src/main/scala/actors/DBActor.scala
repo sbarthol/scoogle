@@ -1,8 +1,7 @@
 package actors
 
 import actors.DBActor._
-import akka.actor.Actor
-import org.slf4j.LoggerFactory
+import akka.actor.{Actor, ActorLogging}
 import utils.HBaseConnection
 
 import java.net.URI
@@ -12,15 +11,13 @@ import scala.math.{ceil, max}
 class DBActor(
     zooKeeperAddress: String,
     zooKeeperPort: Int
-) extends Actor {
+) extends Actor
+    with ActorLogging {
 
   // Todo: test those numbers
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
   private val maxTextLength = 300
-
-  private val logger = LoggerFactory.getLogger(classOf[DBActor])
-
   private val hbaseConn =
     HBaseConnection.init(
       zooKeeperAddress = zooKeeperAddress,
@@ -29,7 +26,7 @@ class DBActor(
 
   sys.addShutdownHook {
     hbaseConn.close()
-    logger.debug("Database was shut down")
+    log.debug("Database was shut down")
   }
 
   override def receive: Receive = {
@@ -43,7 +40,7 @@ class DBActor(
 
       hbaseConn.putWebsite(link = link, text = text, title = title, hash = hash)
       hbaseConn.putWords(hash = hash, words = words)
-      logger.debug(s"Link $link put in database")
+      log.debug(s"Link $link put in database")
 
     case GetLinks(words: List[String], pageNumber) =>
       val hashes = hbaseConn
@@ -54,7 +51,7 @@ class DBActor(
         .toList
         .sortBy { case (_, count) => -count }
 
-      logger.debug(s"Found a total of ${hashes.size} links")
+      log.debug(s"Found a total of ${hashes.size} links")
       val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
 
       val slice = hashes

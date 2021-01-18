@@ -3,13 +3,13 @@ package utils
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
-import utils.HBaseConnection.logger
+import utils.HBaseConnection.log
 
 import scala.jdk.CollectionConverters.{IteratorHasAsScala, SeqHasAsJava}
 
 object HBaseConnection {
 
-  private val logger = LoggerFactory.getLogger(classOf[HBaseConnection])
+  private val log = LoggerFactory.getLogger(classOf[HBaseConnection])
 
   def init(zooKeeperAddress: String, zooKeeperPort: Int): HBaseConnection = {
 
@@ -55,11 +55,11 @@ object HBaseConnection {
           .build()
       admin.createTable(table)
 
-      HBaseConnection.logger.info(
+      HBaseConnection.log.info(
         s"Created table $name with families ${families.toString}"
       )
     } else {
-      HBaseConnection.logger.info(s"Table $name already exists")
+      HBaseConnection.log.info(s"Table $name already exists")
     }
 
     connection.getTable(tableName)
@@ -121,7 +121,7 @@ class HBaseConnection private (
       scan.setRowPrefixFilter((word + "_").getBytes)
       val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
 
-      logger.debug(
+      log.debug(
         s"""Found ${rows.size} links
            |for request word = $word""".stripMargin
       )
@@ -132,7 +132,7 @@ class HBaseConnection private (
         val count =
           Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
 
-        logger.debug(s"Word $word is contained $count times in hash $hash")
+        log.debug(s"Word $word is contained $count times in hash $hash")
         (hash, count)
       })
 

@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 
 object HttpServer {
 
-  private val logger = LoggerFactory.getLogger(classOf[HttpServer])
+  private val log = LoggerFactory.getLogger(classOf[HttpServer])
 
   def startServer(port: Int)(implicit
       ec: ExecutionContext,
@@ -35,7 +35,7 @@ object HttpServer {
 
     bindingFuture.onComplete {
       case Success(value) =>
-        logger.info(s"Server started at address ${value.localAddress.toString}")
+        log.info(s"Server started at address ${value.localAddress.toString}")
       case Failure(exception) => throw exception
     }
   }
@@ -69,12 +69,12 @@ object HttpServer {
 
             onComplete(future) {
               case Success(value) =>
-                logger.debug(
+                log.debug(
                   s"Request succeeded: keywords = $keywords"
                 )
                 complete(HttpEntity(ContentTypes.`application/json`, value))
               case Failure(error) =>
-                logger.warn(
+                log.warn(
                   s"Request failed: keywords = $keywords, error = ${error.getMessage}"
                 )
                 complete(StatusCodes.InternalServerError, error.getMessage)

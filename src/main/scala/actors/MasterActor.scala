@@ -3,8 +3,7 @@ package actors
 import actors.MasterActor._
 import actors.SchedulerActor.{DownloadSourceException, InitializationException}
 import akka.actor.SupervisorStrategy.{Escalate, Restart, Stop}
-import akka.actor.{Actor, OneForOneStrategy, Props}
-import org.slf4j.LoggerFactory
+import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
 import source.Source
 import utils.NettyClient
 
@@ -15,7 +14,7 @@ class MasterActor(
     zooKeeperAddress: String,
     zooKeeperPort: Int,
     maxConcurrentSockets: Int
-) extends Actor {
+) extends Actor with ActorLogging {
 
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 3, loggingEnabled = false) {
@@ -49,8 +48,6 @@ class MasterActor(
     name = "monitor"
   )
 
-  private val logger = LoggerFactory.getLogger(classOf[MasterActor])
-
   sources.foreach(source => {
     context.actorOf(
       props = Props(
@@ -68,7 +65,7 @@ class MasterActor(
   private var completed = 0
   private var failed = 0
 
-  logger.debug(s"Started webcrawler for the following sources: $sources")
+  log.debug(s"Started webcrawler for the following sources: $sources")
 
   override def receive: Receive = {
 
