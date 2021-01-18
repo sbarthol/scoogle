@@ -19,6 +19,7 @@
   font-size: 20px;
   color: #1a0dab;
   margin: 8px 0;
+  display: block;
   text-decoration: none;
   white-space: nowrap;
   text-overflow: ellipsis;

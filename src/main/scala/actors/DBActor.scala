@@ -16,7 +16,7 @@ class DBActor(
 
   // Todo: test those numbers
   private val maxLinksPerPage = 10
-  private val maxTitleLength = 50
+  private val maxTitleLength = 80
   private val maxTextLength = 300
 
   private val logger = LoggerFactory.getLogger(classOf[DBActor])
