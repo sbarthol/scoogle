@@ -6,6 +6,12 @@
         </encoder>
     </appender>
 
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="STDOUT" />
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
