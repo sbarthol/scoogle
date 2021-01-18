@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters._
 class ParserActor(dbActor: ActorRef) extends Actor {
 
   private val minimumWordLength = 3
-  private val minimumElementTextLength = 700
+  private val minimumElementTextLength = 80
 
   override def receive: Receive = { case Body(link, html) =>
     context.parent ! SchedulerActor.NewLinks(link, getLinks(html))
