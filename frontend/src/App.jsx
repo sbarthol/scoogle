@@ -7,6 +7,7 @@ import SearchResults from "./components/SearchResults";
 import Header from "./components/Header";
 import Pagination from "./components/Pagination";
 import NoResults from "./components/NoResults";
+import Error from "./components/Error";
 
 class App extends React.Component {
   constructor(props) {
@@ -19,6 +20,9 @@ class App extends React.Component {
       searchText: "",
       selectedPage: 1,
       loading: false,
+      error: false,
+      errorDescription: "",
+      errorStatus: 0,
     };
 
     this.getSearchResults = this.getSearchResults.bind(this);
@@ -61,22 +65,33 @@ class App extends React.Component {
       totalPages: 1,
       showHomePage: false,
       loading: true,
+      error: false,
     });
     const apiUrl = `/api?query=${query}&pageNumber=${pageNumber}`;
 
-    fetch(apiUrl)
-      .then((res) => {
-        return res.json();
-      })
-      .then((searchResults) => {
+    fetch(apiUrl).then((res) => {
+      if (res.status === 200) {
+        res
+          .json()
+          .then((searchResults) => {
+            this.setState({
+              links: searchResults.links,
+              totalPages: searchResults.totalPages,
+              showHomePage: false,
+              loading: false,
+            });
+          })
+          .catch(console.log);
+      } else {
         this.setState({
-          links: searchResults.links,
-          totalPages: searchResults.totalPages,
           showHomePage: false,
           loading: false,
+          error: true,
+          errorDescription: res.statusText,
+          errorStatus: res.status,
         });
-      })
-      .catch(console.log);
+      }
+    });
   }
 
   render() {
@@ -111,6 +126,20 @@ class App extends React.Component {
               }}
             />
           </div>
+        </div>
+      );
+    } else if (this.state.error) {
+      return (
+        <div>
+          <Header
+            searchBarText={this.state.searchBarText}
+            handleSearchBarChange={this.handleSearchBarChange}
+            onKeyDown={this.onKeyDown}
+          />
+          <Error
+            status={this.state.errorStatus}
+            description={this.state.errorDescription}
+          />
         </div>
       );
     } else if (!this.state.loading && this.state.links.length > 0) {
