@@ -51,7 +51,7 @@ Run the `WebCrawler.scala` file with the following command line arguments.
 The webcrawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping
 endpoint on ` http://localhost:9095`. A Prometheus server can be started in order to view the various Akka metrics.
 
-![prometheus](https://drive.google.com/uc?id=1mODQzk9y-si5v7h4qNdABI5E6_OChzGv)
+![prometheus](https://drive.google.com/uc?id=1PFvHFVYTiBU629cWccnwKlS08UEW6Blr)
 
 ## Frontend written in *React*
 
