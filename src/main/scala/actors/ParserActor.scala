@@ -9,16 +9,22 @@ import scala.jdk.CollectionConverters._
 class ParserActor(dbActor: ActorRef) extends Actor {
 
   private val minimumWordLength = 3
+  private val minimumElementTextLength = 700
 
   override def receive: Receive = { case Body(link, html) =>
     context.parent ! SchedulerActor.NewLinks(link, getLinks(html))
     val text = getText(html)
-    dbActor ! DBActor.Put(
-      words = getWords(text),
-      link = link,
-      text = text,
-      title = getTitle(html)
-    )
+    val words = getWords(text)
+
+    if (words.nonEmpty) {
+
+      dbActor ! DBActor.Put(
+        words = words,
+        link = link,
+        text = text,
+        title = getTitle(html)
+      )
+    }
   }
 
   private def getTitle(html: String): String = {
@@ -29,10 +35,14 @@ class ParserActor(dbActor: ActorRef) extends Actor {
   private def getText(html: String): String = {
 
     try {
+
       Jsoup
         .parse(html)
-        .body()
-        .text()
+        .select("p, blockquote")
+        .eachText()
+        .asScala
+        .filter(_.length >= minimumElementTextLength)
+        .mkString(" ")
 
     } catch {
       case _: Exception => ""
@@ -43,9 +53,9 @@ class ParserActor(dbActor: ActorRef) extends Actor {
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
     text
-      .split("[\\p{Punct}\\s]+") // Todo does not work with " and '
+      .split("[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+")
       .toList
-      .filter(_.length >= minimumWordLength)
+      .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
       .map(_.toLowerCase)
       .groupBy(identity)
       .view
