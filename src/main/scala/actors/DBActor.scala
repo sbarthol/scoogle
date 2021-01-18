@@ -87,7 +87,7 @@ class DBActor(
     }
 
     for (i <- 0 until words.length) {
-      if (keywords.exists(words(i).startsWith)) { // Todo: mieux que ca ?
+      if (keywords.exists(words(i).toLowerCase.startsWith)) { // Todo: mieux que ca ?
 
         val start = math.max(0, i - numberWrappingWords)
         val end = math.min(i + numberWrappingWords, words.length - 1)
