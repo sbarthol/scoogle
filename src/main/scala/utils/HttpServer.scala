@@ -70,7 +70,7 @@ object HttpServer {
             onComplete(future) {
               case Success(value) =>
                 logger.debug(
-                  s"Request succeeded: keywords = $keywords, response = $value"
+                  s"Request succeeded: keywords = $keywords"
                 )
                 complete(HttpEntity(ContentTypes.`application/json`, value))
               case Failure(error) =>
