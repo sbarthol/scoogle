@@ -18,6 +18,7 @@ class DBActor(
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
   private val maxTextLength = 300
+
   private val hbaseConn =
     HBaseConnection.init(
       zooKeeperAddress = zooKeeperAddress,
@@ -65,12 +66,42 @@ class DBActor(
           Item(
             link = link,
             title = title.take(maxTitleLength),
-            text = text.take(maxTextLength),
+            text = selectTextSegments(text, words),
             cleanLink = cleanLink(link)
           )
         }
 
       sender ! Response(links = slice, totalPages = totalPages)
+  }
+
+  private def selectTextSegments(text: String, keywords: List[String]): String = {
+
+    val numberWrappingWords = 4
+    val sb = new StringBuilder()
+    val words = text.trim.split(" ")
+
+    def addToSb(w: String, bold: Boolean): Unit = {
+      if (bold) sb.addAll("<strong>")
+      sb.addAll(w)
+      if (bold) sb.addAll("</strong>")
+    }
+
+    for (i <- 0 until words.length) {
+      if (keywords.exists(words(i).startsWith)) { // Todo: mieux que ca ?
+
+        val start = math.max(0, i - numberWrappingWords)
+        val end = math.min(i + numberWrappingWords, words.length - 1)
+
+        for (j <- start until end) {
+          addToSb(words(j), i == j)
+          sb.addOne(' ')
+        }
+        addToSb(words(end), i == end)
+        sb.addAll("... ")
+      }
+    }
+
+    sb.toString
   }
 
   private def cleanLink(link: String): String = {

@@ -8,7 +8,7 @@ function SearchResult({ title, link, text, cleanLink }) {
       <a href={link} className="Title">
         {title}
       </a>
-      <p className="Text">{text}</p>
+      <div className="Text" dangerouslySetInnerHTML={{ __html: text }}></div>
     </div>
   );
 }
