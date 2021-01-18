@@ -17,9 +17,6 @@ object HBaseConnection {
     config.set("hbase.zookeeper.quorum", zooKeeperAddress)
     config.setInt("hbase.zookeeper.property.clientPort", zooKeeperPort)
 
-    HBaseAdmin.available(config)
-    logger.info(s"HBase master is available")
-
     implicit val connection = ConnectionFactory.createConnection(config)
     implicit val admin = connection.getAdmin
 
