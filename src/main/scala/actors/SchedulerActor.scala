@@ -4,6 +4,7 @@ import actors.SchedulerActor._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import org.apache.commons.validator.routines.UrlValidator
 
+import java.net.URL
 import scala.collection.mutable
 
 object SchedulerActor {
@@ -82,6 +83,7 @@ class SchedulerActor(
 
         if (
           urlValidator.isValid(newLink)
+          && sameHost(source, newLink)
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
         ) {
@@ -95,5 +97,12 @@ class SchedulerActor(
           getterActor ! GetterActor.Link(newLink)
         }
       })
+  }
+
+  private def sameHost(first: String, second: String): Boolean = {
+
+    val firstUrl = new URL(first)
+    val secondUrl = new URL(second)
+    firstUrl.getHost == secondUrl.getHost
   }
 }
