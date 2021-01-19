@@ -14,6 +14,7 @@ object SchedulerActor {
   case class Done(link: String, body: String)
   case class Error(link: String, error: Throwable)
   case class NewLinks(link: String, newLinks: List[String])
+  case class CheckedLink(link: String)
 
   class InitializationException(message: String) extends Exception(message)
   class DownloadSourceException(message: String) extends Exception(message)
@@ -23,7 +24,8 @@ class SchedulerActor(
     source: String,
     maxDepth: Int,
     dbActor: ActorRef,
-    getterActor: ActorRef
+    getterActor: ActorRef,
+    linkCheckerActor: ActorRef
 ) extends Actor
     with ActorLogging {
 
@@ -86,19 +88,22 @@ class SchedulerActor(
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
         ) {
+
+          linkCheckerActor ! LinkCheckerActor.Check(newLink)
           distanceToSource.put(
             key = newLink,
             value = parentDistanceToSource + 1
           )
 
-          log.debug(s"Downloading new Link($newLink)")
-          context.parent ! MasterActor.Put(newLink)
-          getterActor ! GetterActor.Link(newLink)
-
         } else {
           log.debug(s"Link $newLink does not meet one or more conditions")
         }
       })
+
+    case CheckedLink(link) =>
+      log.debug(s"Downloading new Link($link)")
+      context.parent ! MasterActor.Put(link)
+      getterActor ! GetterActor.Link(link)
   }
 
   private def sameHost(first: String, second: String): Boolean = {

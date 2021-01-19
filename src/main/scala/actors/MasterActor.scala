@@ -42,6 +42,9 @@ class MasterActor(
       name = "getter"
     )
 
+  private val linkCheckerActor =
+    context.actorOf(props = Props(new LinkCheckerActor), name = "linkChecker")
+
   context.actorOf(
     props = Props(
       new MonitorActor
@@ -56,7 +59,8 @@ class MasterActor(
           source = source.link,
           maxDepth = source.depth,
           dbActor = dbActor,
-          getterActor = getterActor
+          getterActor = getterActor,
+          linkCheckerActor = linkCheckerActor
         )
       )
     )
