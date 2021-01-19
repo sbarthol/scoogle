@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters._
 class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
   private val minimumWordLength = 3
-  private val minimumElementTextLength = 80
+  private val minimumElementTextLength = 10
 
   override def receive: Receive = { case Body(link, html) =>
     context.parent ! SchedulerActor.NewLinks(link, getLinks(html, link))
@@ -40,9 +40,10 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
       Jsoup
         .parse(html)
-        .select("p, blockquote, pre")
-        .eachText()
+        .getAllElements
+        .textNodes()
         .asScala
+        .map(_.text)
         .filter(_.length >= minimumElementTextLength)
         .mkString(" ")
 
@@ -55,7 +56,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
     text
-      .split("[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+")
+      .split("[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+")
       .toList
       .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
       .map(_.toLowerCase)
