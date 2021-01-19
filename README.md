@@ -4,7 +4,7 @@ Scoogle is a Search Engine written in Scala and using Akka Actors developed at *
 Switzerland. Its components are a webcrawler, a HBase data store, a server serving a backend API and a frontend written
 in React. The HBase master, ZooKeeper and servers need to be started first, either locally or remotely, either on the
 local filesystem or on HDFS. The address and port number of the ZooKeeper Quorum server are given to the Scoogle
-webcrawler and the server.
+webcrawler and server.
 
 ![demo](https://drive.google.com/uc?id=1A-X3PufeiBJ8SwROvygW2IEwrOQnnHvm)
 
