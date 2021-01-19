@@ -1,18 +1,18 @@
 import actors.MasterActor
 import akka.actor.{ActorSystem, Props}
-import conf.WebCrawlerConf
+import conf.WebcrawlerConf
 import kamon.Kamon
 import source.SourcesLoader
 
-object WebCrawler {
+object Webcrawler {
 
   def main(args: Array[String]): Unit = {
 
     Kamon.init()
 
-    val conf = new WebCrawlerConf(args)
+    val conf = new WebcrawlerConf(args)
     val sources = SourcesLoader.loadFromFile(filepath = conf.sourceFilepath.apply())
-    val system = ActorSystem("WebCrawler")
+    val system = ActorSystem("Webcrawler")
 
     system.actorOf(
       props = Props(

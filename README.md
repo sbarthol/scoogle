@@ -1,23 +1,23 @@
 # Scoogle
 
 Scoogle is a Search Engine written in Scala and using Akka Actors developed at *Bartholme Labs* in Crissier,
-Switzerland. Its components are a webcrawler, a HBase data store, a server serving a backend API and a frontend written
+Switzerland. Its components are a web crawler, a HBase data store, a server serving a backend API and a frontend written
 in React. The HBase master, ZooKeeper and servers need to be started first, either locally or remotely, either on the
 local filesystem or on HDFS. The address and port number of the ZooKeeper Quorum server are given to the Scoogle
-webcrawler and server.
+web crawler and server.
 
 ![demo](https://drive.google.com/uc?id=1A-X3PufeiBJ8SwROvygW2IEwrOQnnHvm)
 
-## Webcrawler based on *Akka Actors*
+## Web Crawler based on *Akka Actors*
 
 ### Seed
 
-The webcrawler takes as input the seed in the shape of an XML file. Find below an example of such a file. The different
+The web crawler takes as input the seed in the shape of an XML file. Find below an example of such a file. The different
 fields designate the following:
 
-- `link` The link to a source. The webcrawler will take all the links as a seed.
+- `link` The link to a source. The web crawler will take all the links as a seed.
 - `depth` The depth up to which each source will be crawled.
-- `crawlPresent` If the webcrawler encounters a link which is already present in the database, It will stop at this link
+- `crawlPresent` If the web crawler encounters a link which is already present in the database, It will stop at this link
   if the option is set to `false`, otherwise it will go on crawling from this link.
 
 ```
@@ -37,7 +37,7 @@ fields designate the following:
 
 ### Running
 
-Run the `WebCrawler.scala` file with the following command line arguments.
+Run the `Webcrawler.scala` file with the following command line arguments.
 
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
 - `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
@@ -48,7 +48,7 @@ Run the `WebCrawler.scala` file with the following command line arguments.
 
 ### Monitoring
 
-The webcrawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping
+The web crawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping
 endpoint on ` http://localhost:9095`. A Prometheus server can be started in order to view the various Akka metrics.
 
 ![prometheus](https://drive.google.com/uc?id=1PFvHFVYTiBU629cWccnwKlS08UEW6Blr)

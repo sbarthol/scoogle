@@ -66,7 +66,7 @@ class MasterActor(
   private var completed = 0
   private var failed = 0
 
-  log.debug(s"Started webcrawler for the following sources: $sources")
+  log.debug(s"Started web crawler for the following sources: $sources")
 
   override def receive: Receive = {
 

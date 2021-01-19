@@ -2,9 +2,9 @@ package conf
 
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
-class WebCrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+class WebcrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
-  banner("""This program is a webcrawler that takes as input list of links as a
+  banner("""This program is a web crawler that takes as input list of links as a
       |starting point. It then downloads the links and stores the contents
       |as well as an inverted index in a HBase store.
       |""".stripMargin)
