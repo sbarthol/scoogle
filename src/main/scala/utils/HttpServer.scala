@@ -31,7 +31,7 @@ object HttpServer {
     val frontendRoute = getFrontendRoute
 
     val bindingFuture =
-      Http().newServerAt("localhost", port).bind(apiRoute ~ frontendRoute)
+      Http().newServerAt("0.0.0.0", port).bind(apiRoute ~ frontendRoute)
 
     bindingFuture.onComplete {
       case Success(value) =>
