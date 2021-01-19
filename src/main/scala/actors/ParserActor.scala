@@ -38,7 +38,7 @@ class ParserActor(dbActor: ActorRef) extends Actor {
 
       Jsoup
         .parse(html)
-        .select("p, blockquote")
+        .select("p, blockquote, pre")
         .eachText()
         .asScala
         .filter(_.length >= minimumElementTextLength)
