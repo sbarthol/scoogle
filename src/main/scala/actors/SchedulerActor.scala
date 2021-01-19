@@ -46,10 +46,8 @@ class SchedulerActor(
       throw new InitializationException(s"link $source not valid")
     } else {
 
-      log.debug(s"Downloading new Link($source)")
+      linkCheckerActor ! LinkCheckerActor.Check(source)
       distanceToSource.put(source, 0)
-      context.parent ! MasterActor.Put(source)
-      getterActor ! GetterActor.Link(source)
     }
   } catch {
     case e: Throwable =>
