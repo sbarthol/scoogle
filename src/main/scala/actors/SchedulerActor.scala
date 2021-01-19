@@ -94,6 +94,9 @@ class SchedulerActor(
           log.debug(s"Downloading new Link($newLink)")
           context.parent ! MasterActor.Put(newLink)
           getterActor ! GetterActor.Link(newLink)
+
+        } else {
+          log.debug(s"Link $newLink does not meet one or more conditions")
         }
       })
   }
