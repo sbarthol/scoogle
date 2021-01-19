@@ -1,7 +1,7 @@
 package source
 import scala.xml.XML
 
-case class Source(link: String, depth: Int, crawlPresent: Boolean)
+case class Source(link: String, depth: Int)
 
 object SourcesLoader {
 
@@ -14,8 +14,7 @@ object SourcesLoader {
       .map(node =>
         Source(
           link = (node \ "link").text,
-          depth = (node \ "depth").text.toInt,
-          crawlPresent = (node \ "crawlPresent").text.toBoolean
+          depth = (node \ "depth").text.toInt
         )
       )
   }

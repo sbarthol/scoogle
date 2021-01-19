@@ -17,20 +17,16 @@ fields designate the following:
 
 - `link` The link to a source. The web crawler will take all the links as a seed.
 - `depth` The depth up to which each source will be crawled.
-- `crawlPresent` If the web crawler encounters a link which is already present in the database, It will stop at this link
-  if the option is set to `false`, otherwise it will go on crawling from this link.
 
 ```
 <sources>
     <source>
         <link>https://www.wikipedia.com</link>
         <depth>3</depth>
-        <crawlPresent>true</crawlPresent>
     </source>
     <source>
         <link>https://www.facebook.com</link>
         <depth>1</depth>
-        <crawlPresent>false</crawlPresent>
     </source>
 </sources>
 ```

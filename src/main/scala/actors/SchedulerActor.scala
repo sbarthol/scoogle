@@ -22,7 +22,6 @@ object SchedulerActor {
 class SchedulerActor(
     source: String,
     maxDepth: Int,
-    crawlPresentLinks: Boolean,
     dbActor: ActorRef,
     getterActor: ActorRef
 ) extends Actor
