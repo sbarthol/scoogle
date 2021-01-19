@@ -12,7 +12,7 @@ class ParserActor(dbActor: ActorRef) extends Actor {
   private val minimumElementTextLength = 80
 
   override def receive: Receive = { case Body(link, html) =>
-    context.parent ! SchedulerActor.NewLinks(link, getLinks(html))
+    context.parent ! SchedulerActor.NewLinks(link, getLinks(html, link))
     val text = getText(html)
     val words = getWords(text)
 
@@ -63,11 +63,11 @@ class ParserActor(dbActor: ActorRef) extends Actor {
       .toList
   }
 
-  private def getLinks(html: String): List[String] = {
+  private def getLinks(html: String, link: String): List[String] = {
+
     Jsoup
-      .parse(html)
-      .select("a[href]")
-      .iterator()
+      .parse(html, link)
+      .select("a")
       .asScala
       .map(_.absUrl("href"))
       .toList
