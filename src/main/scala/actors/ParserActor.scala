@@ -1,12 +1,12 @@
 package actors
 
 import actors.ParserActor._
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import org.jsoup.Jsoup
 
 import scala.jdk.CollectionConverters._
 
-class ParserActor(dbActor: ActorRef) extends Actor {
+class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
   private val minimumWordLength = 3
   private val minimumElementTextLength = 80
@@ -15,6 +15,8 @@ class ParserActor(dbActor: ActorRef) extends Actor {
     context.parent ! SchedulerActor.NewLinks(link, getLinks(html, link))
     val text = getText(html)
     val words = getWords(text)
+
+    log.debug(s"Link $link contains text $text")
 
     if (words.nonEmpty) {
 
