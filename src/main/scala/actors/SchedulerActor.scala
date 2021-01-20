@@ -2,14 +2,12 @@ package actors
 
 import actors.SchedulerActor._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import org.apache.commons.validator.routines.UrlValidator
 
 import java.net.URL
 import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
 object SchedulerActor {
-
-  private val urlValidator = new UrlValidator(Array("http", "https"))
 
   case class Done(link: String, body: String)
   case class Error(link: String, error: Throwable)
@@ -42,7 +40,7 @@ class SchedulerActor(
   try {
     if (maxDepth < 0) {
       throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
-    } else if (!urlValidator.isValid(source)) {
+    } else if (!urlIsValid(source)) {
       throw new InitializationException(s"link $source not valid")
     } else {
 
@@ -81,7 +79,7 @@ class SchedulerActor(
           distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
 
         if (
-          urlValidator.isValid(newLink)
+          urlIsValid(newLink)
           && sameHost(source, newLink)
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
@@ -102,6 +100,18 @@ class SchedulerActor(
       log.debug(s"Downloading new Link($link)")
       context.parent ! MasterActor.Put(link)
       getterActor ! GetterActor.Link(link)
+  }
+
+  private def urlIsValid(url: String): Boolean = {
+
+    Try {
+      new URL(url).toURI
+    } match {
+      case Success(_) => true
+      case Failure(exception) =>
+        log.warning(s"URL $url not valid: ${exception.getMessage}")
+        false
+    }
   }
 
   private def sameHost(first: String, second: String): Boolean = {
