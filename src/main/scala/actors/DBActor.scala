@@ -74,7 +74,7 @@ class DBActor(
 
   private def selectTextSegments(text: String, keywords: List[String]): String = {
 
-    val numberWrappingWords = 4
+    val numberWrappingWords = 3
     val sb = new StringBuilder()
     val words = text.trim.split(" ")
 
