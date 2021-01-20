@@ -65,8 +65,8 @@ class DBActor(
 
           Item(
             link = link,
-            title = title.take(maxTitleLength),
-            text = selectTextSegments(text, words),
+            title = cleanText(title.take(maxTitleLength)),
+            text = cleanText(selectTextSegments(text, words)),
             cleanLink = cleanLink(link)
           )
         }
@@ -114,6 +114,15 @@ class DBActor(
       null,
       uri.getFragment
     ).toString
+  }
+
+  private def cleanText(text: String): String = {
+
+    text
+      .replace('�', ' ')
+      .replace("\\", "")
+      .trim
+      .replaceAll(" +", " ")
   }
 }
 
