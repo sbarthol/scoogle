@@ -46,9 +46,9 @@ class DBActor(
     case GetLinks(words: List[String], pageNumber) =>
       val hashes = hbaseConn
         .getHashes(words)
-        .groupMap { case (hash, _) => hash } { case (_, count) => count }
-        .view
-        .mapValues(l => if (l.size < words.size) 0 else l.min)
+        .groupMap {case (hash, _) => hash} {case (_, count) => count}
+        .filter {case (_, list) => list.size == words.size}
+        .view.mapValues(_.sum)
         .toList
         .sortBy { case (_, count) => -count }
 
