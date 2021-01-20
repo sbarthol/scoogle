@@ -13,10 +13,12 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = { case Body(link, html) =>
     context.parent ! SchedulerActor.NewLinks(link, getLinks(html, link))
+
     val text = getText(html)
+    val title = getTitle(html)
     val words = getWords(text)
 
-    log.debug(s"Link $link contains text $text")
+    log.debug(s"Link $link contains title $title text $text")
 
     if (words.nonEmpty) {
 
@@ -24,14 +26,20 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
         words = words,
         link = link,
         text = text,
-        title = getTitle(html)
+        title = title
       )
     }
   }
 
   private def getTitle(html: String): String = {
 
-    Jsoup.parse(html).title()
+    val doc = Jsoup.parse(html)
+    val h1 = doc.select("h1")
+    val title = doc.title()
+
+    if (!h1.isEmpty) h1.get(0).text()
+    else if (title.nonEmpty) title
+    else "No Title Found"
   }
 
   private def getText(html: String): String = {
@@ -56,7 +64,9 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
     text
-      .split("[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[…]*|[:]*|[/]*|[!]*|[?]*|[+]*]+")
+      .split(
+        "[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[…]*|[:]*|[/]*|[!]*|[?]*|[+]*]+"
+      )
       .toList
       .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
       .map(_.toLowerCase)
