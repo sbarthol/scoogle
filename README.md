@@ -15,7 +15,8 @@ crawler and server.
 The web crawler takes as input the seed in the shape of one or more XML files. Find below an example of such a file. The
 different fields designate the following:
 
-- `link` The link to a source. The web crawler will take all the links as a seed.
+- `link` The link to a source. This can be a file on the local filesystem or a http(s) website. The web crawler will
+  take all the links as a seed.
 - `depth` The depth up to which each source will be crawled.
 
 ```
@@ -25,7 +26,7 @@ different fields designate the following:
         <depth>3</depth>
     </source>
     <source>
-        <link>https://www.facebook.com</link>
+        <link>file:///path/to/file.txt</link>
         <depth>1</depth>
     </source>
 </sources>
