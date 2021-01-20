@@ -2,7 +2,7 @@ package conf
 
 import org.rogach.scallop.ScallopConf
 
-class WebcrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+class WebCrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
   banner("""This program is a web crawler that takes as input list of links as a
       |starting point. It then downloads the links and stores the contents

@@ -34,7 +34,7 @@ different fields designate the following:
 
 ### Running
 
-Run the `Webcrawler.scala <args> <source1> <source2> ...` file with the following command line arguments.
+Run the `WebCrawler.scala <args> <source1> <source2> ...` with the following command line arguments.
 
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
 - `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
