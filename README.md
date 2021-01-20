@@ -3,8 +3,8 @@
 Scoogle is a Search Engine written in Scala and using Akka Actors developed at *Bartholme Labs* in Crissier,
 Switzerland. Its components are a web crawler, a HBase data store, a server serving a backend API and a frontend written
 in React. The HBase master, ZooKeeper and servers need to be started first, either locally or remotely, either on the
-local filesystem or on HDFS. The address and port number of the ZooKeeper Quorum server are given to the Scoogle
-web crawler and server.
+local filesystem or on HDFS. The address and port number of the ZooKeeper Quorum server are given to the Scoogle web
+crawler and server.
 
 ![demo](https://drive.google.com/uc?id=1A-X3PufeiBJ8SwROvygW2IEwrOQnnHvm)
 
@@ -12,8 +12,8 @@ web crawler and server.
 
 ### Seed
 
-The web crawler takes as input the seed in the shape of an XML file. Find below an example of such a file. The different
-fields designate the following:
+The web crawler takes as input the seed in the shape of one or more XML files. Find below an example of such a file. The
+different fields designate the following:
 
 - `link` The link to a source. The web crawler will take all the links as a seed.
 - `depth` The depth up to which each source will be crawled.
@@ -33,13 +33,12 @@ fields designate the following:
 
 ### Running
 
-Run the `Webcrawler.scala` file with the following command line arguments.
+Run the `Webcrawler.scala <args> <source1> <source2> ...` file with the following command line arguments.
 
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
 - `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
 - `--maxConcurrentSockets` The maximum number of TCP sockets that the program will open simultaneously. Sometimes if
   this number is too large, the requests will time out. The default is 30.
-- `--sourceFilepath` The filepath of the source file containing the source links.
 - `-h, --help` Show help message.
 
 ### Monitoring

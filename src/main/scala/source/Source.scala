@@ -5,7 +5,12 @@ case class Source(link: String, depth: Int)
 
 object SourcesLoader {
 
-  def loadFromFile(filepath: String): List[Source] = {
+  def loadFromFiles(filepaths: List[String]): List[Source] = {
+
+    filepaths.flatMap(loadFromFile)
+  }
+
+  private def loadFromFile(filepath: String): List[Source] = {
 
     XML
       .loadFile(filepath)

@@ -1,6 +1,6 @@
 package conf
 
-import org.rogach.scallop.{ScallopConf, ScallopOption}
+import org.rogach.scallop.ScallopConf
 
 class WebcrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
@@ -9,7 +9,7 @@ class WebcrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       |as well as an inverted index in a HBase store.
       |""".stripMargin)
 
-  val maxConcurrentSockets: ScallopOption[Int] = opt[Int](
+  val maxConcurrentSockets = opt[Int](
     name = "maxConcurrentSockets",
     noshort = true,
     descr =
@@ -19,16 +19,7 @@ class WebcrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     argName = "max"
   )
 
-  val sourceFilepath: ScallopOption[String] = opt[String](
-    name = "sourceFilepath",
-    noshort = true,
-    descr = "The filepath of the source file containing the source links.",
-    required = true,
-    validate = _.nonEmpty,
-    argName = "path"
-  )
-
-  val zooKeeperAddress: ScallopOption[String] = opt[String](
+  val zooKeeperAddress = opt[String](
     name = "zooKeeperAddress",
     noshort = true,
     descr = "The address of the ZooKeeper Quorum server. Defaults 'localhost'",
@@ -37,13 +28,20 @@ class WebcrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     argName = "addr"
   )
 
-  val zooKeeperPort: ScallopOption[Int] = opt[Int](
+  val zooKeeperPort = opt[Int](
     name = "zooKeeperPort",
     noshort = true,
     descr = "The port of the ZooKeeper Quorum server. Defaults '2181'",
     default = Some(2181),
     validate = p => { p >= 0 && p <= (1 << 16) },
     argName = "port"
+  )
+
+  val sourceFilepaths = trailArg[List[String]](
+    name = "sourceFilepaths",
+    descr = "The list of filepaths of the sources containing the source links.",
+    validate = l => { l.nonEmpty && l.forall(_.nonEmpty) },
+    required = true
   )
 
   verify()

@@ -1,6 +1,6 @@
 package conf
 
-import org.rogach.scallop.{ScallopConf, ScallopOption}
+import org.rogach.scallop.ScallopConf
 
 class ServerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
 
@@ -10,7 +10,7 @@ class ServerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
       | requests to the prefilled HBase store""".stripMargin
   )
 
-  val port: ScallopOption[Int] = opt[Int](
+  val port = opt[Int](
     name = "port",
     noshort = true,
     descr = "The port number on which the server listens.",
@@ -19,7 +19,7 @@ class ServerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     argName = "port"
   )
 
-  val zooKeeperAddress: ScallopOption[String] = opt[String](
+  val zooKeeperAddress = opt[String](
     name = "zooKeeperAddress",
     noshort = true,
     descr = "The address of the ZooKeeper Quorum server. Defaults 'localhost'",
@@ -28,7 +28,7 @@ class ServerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     argName = "addr"
   )
 
-  val zooKeeperPort: ScallopOption[Int] = opt[Int](
+  val zooKeeperPort = opt[Int](
     name = "zooKeeperPort",
     noshort = true,
     descr = "The port of the ZooKeeper Quorum server. Defaults '2181'",
