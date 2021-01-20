@@ -14,10 +14,8 @@ class DBActor(
 ) extends Actor
     with ActorLogging {
 
-  // Todo: test those numbers
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
-  private val maxTextLength = 300
 
   private val hbaseConn =
     HBaseConnection.init(
