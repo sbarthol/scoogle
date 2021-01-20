@@ -3,7 +3,9 @@ package actors
 import akka.actor.{Actor, ActorRef}
 import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, Response}
 
+import java.net.{URL, URLDecoder}
 import scala.collection.mutable
+import scala.io.Source
 
 class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extends Actor {
 
@@ -41,21 +43,41 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
 
   def request(link: String, scheduler: ActorRef): Unit = {
 
-    val request = client.prepareGet(link).build()
+    try {
 
-    client.executeRequest(
-      request,
-      new AsyncCompletionHandler[Response]() {
-        override def onCompleted(response: Response): Response = {
-          self ! GetterActor.Done(link, response.getResponseBody(), scheduler)
-          response
-        }
+      val url = new URL(link)
+      val protocol = url.getProtocol
 
-        override def onThrowable(t: Throwable): Unit = {
-          self ! GetterActor.Error(link, t, scheduler)
-        }
+      if (protocol == "file") {
+
+        val decoded = URLDecoder.decode(url.getPath, "UTF-8" )
+        val source = Source.fromFile(decoded, "UTF-8")
+        val content = source.mkString
+        source.close
+
+        self ! GetterActor.Done(link, content, scheduler)
+
+      } else {
+
+        val request = client.prepareGet(link).build()
+
+        client.executeRequest(
+          request,
+          new AsyncCompletionHandler[Response]() {
+            override def onCompleted(response: Response): Response = {
+              self ! GetterActor.Done(link, response.getResponseBody(), scheduler)
+              response
+            }
+
+            override def onThrowable(t: Throwable): Unit = {
+              self ! GetterActor.Error(link, t, scheduler)
+            }
+          }
+        )
       }
-    )
+    } catch {
+      case t: Throwable => self ! GetterActor.Error(link, t, scheduler)
+    }
   }
 }
 
