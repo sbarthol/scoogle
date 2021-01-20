@@ -8,7 +8,6 @@ import scala.jdk.CollectionConverters._
 
 class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
-  private val minimumWordLength = 3
   private val minimumElementTextLength = 10
 
   override def receive: Receive = { case Body(link, html) =>
@@ -63,13 +62,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
   private def getWords(text: String): List[(String, Int)] = {
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
-    text
-      .split(
-        "[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[…]*|[:]*|[/]*|[!]*|[?]*|[+]*]+"
-      )
-      .toList
-      .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
-      .map(_.toLowerCase)
+    extractWords(text)
       .groupBy(identity)
       .view
       .mapValues(_.size)
@@ -89,5 +82,18 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 }
 
 object ParserActor {
+  def extractWords(text: String): List[String] = {
+
+    val minimumWordLength = 3
+
+    text
+      .split(
+        "[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[…]*|[:]*|[/]*|[!]*|[?]*|[+]*]+"
+      )
+      .toList
+      .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
+      .map(_.toLowerCase)
+  }
+
   case class Body(link: String, html: String)
 }

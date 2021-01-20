@@ -1,6 +1,7 @@
 package utils
 
 import actors.DBActor
+import actors.ParserActor.extractWords
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Server
@@ -20,7 +21,6 @@ import scala.util.{Failure, Success}
 object HttpServer {
 
   private val log = LoggerFactory.getLogger(classOf[HttpServer])
-  private val minimumWordLength = 3
 
   def startServer(port: Int)(implicit
       ec: ExecutionContext,
@@ -63,12 +63,8 @@ object HttpServer {
 
           (query, pageNumber) => {
 
-            val keywords = query.trim
-              .split("\\s+")
-              .toList
-              .map(_.toLowerCase)
-              .distinct
-              .filter(_.length >= minimumWordLength)
+            val keywords = extractWords(query).distinct
+
             val future = (dbActor ? DBActor.GetLinks(keywords, pageNumber))
               .mapTo[DBActor.Response]
               .map(_.toJson.compactPrint)
