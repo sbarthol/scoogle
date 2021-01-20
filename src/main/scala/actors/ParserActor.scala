@@ -56,7 +56,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
     text
-      .split("[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[:]*|[/]*|[!]*|[?]*|[+]*]+")
+      .split("[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[…]*|[:]*|[/]*|[!]*|[?]*|[+]*]+")
       .toList
       .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
       .map(_.toLowerCase)
