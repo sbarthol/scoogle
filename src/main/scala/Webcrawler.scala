@@ -11,16 +11,16 @@ object Webcrawler {
     Kamon.init()
 
     val conf = new WebcrawlerConf(args)
-    val sources = SourcesLoader.loadFromFile(filepath = conf.sourceFilepath.apply())
+    val sources = SourcesLoader.loadFromFile(filepath = conf.sourceFilepath())
     val system = ActorSystem("Webcrawler")
 
     system.actorOf(
       props = Props(
         new MasterActor(
           sources = sources,
-          zooKeeperAddress = conf.zooKeeperAddress.apply(),
-          zooKeeperPort = conf.zooKeeperPort.apply(),
-          maxConcurrentSockets = conf.maxConcurrentSockets.apply()
+          zooKeeperAddress = conf.zooKeeperAddress(),
+          zooKeeperPort = conf.zooKeeperPort(),
+          maxConcurrentSockets = conf.maxConcurrentSockets()
         )
       ),
       name = "master"

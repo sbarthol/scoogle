@@ -16,14 +16,14 @@ object Server {
     implicit val dbActor = system.actorOf(
       props = Props(
         new DBActor(
-          zooKeeperAddress = conf.zooKeeperAddress.apply(),
-          zooKeeperPort = conf.zooKeeperPort.apply()
+          zooKeeperAddress = conf.zooKeeperAddress(),
+          zooKeeperPort = conf.zooKeeperPort()
         )
       ),
       name = "db"
     )
 
-    HttpServer.startServer(port = conf.port.apply())
+    HttpServer.startServer(port = conf.port())
   }
 
   private class Server
