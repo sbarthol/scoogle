@@ -19,7 +19,7 @@ different fields designate the following:
   take all the links as a seed.
 - `depth` The depth up to which each source will be crawled.
 
-```
+```xml
 <sources>
     <source>
         <link>https://www.wikipedia.com</link>
@@ -34,13 +34,19 @@ different fields designate the following:
 
 ### Running
 
-Run the `WebCrawler.scala <args> <source1> <source2> ...` with the following command line arguments.
+Run the `WebCrawler.scala` file with the following command line arguments:
+
+`<options> <source1> <source2> ...`
+
+The options are
 
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
 - `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
 - `--maxConcurrentSockets` The maximum number of TCP sockets that the program will open simultaneously. Sometimes if
   this number is too large, the requests will time out. The default is 30.
 - `-h, --help` Show help message.
+
+followed by a list of source xml files in the format described above.
 
 ### Monitoring
 
@@ -68,7 +74,7 @@ An *Akka HTTP* server runs and serves the following routes:
 
 #
 
-Run the `Server.scala` file with the following command line arguments.
+Run the `Server.scala` file with the following options:
 
 - `--port` The port number on which the server listens.
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
