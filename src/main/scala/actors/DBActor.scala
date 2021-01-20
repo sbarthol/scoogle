@@ -4,7 +4,7 @@ import actors.DBActor._
 import akka.actor.{Actor, ActorLogging}
 import utils.HBaseConnection
 
-import java.net.URI
+import java.net.{URI, URLDecoder}
 import java.security.MessageDigest
 import scala.math.{ceil, max}
 
@@ -105,13 +105,15 @@ class DBActor(
   private def cleanLink(link: String): String = {
 
     val uri = new URI(link)
-    new URI(
+    val noQuery = new URI(
       uri.getScheme,
       uri.getAuthority,
       uri.getPath,
       null,
       uri.getFragment
     ).toString
+
+    URLDecoder.decode(noQuery, "UTF-8" )
   }
 
   private def cleanText(text: String): String = {
