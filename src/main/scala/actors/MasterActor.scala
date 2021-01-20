@@ -92,7 +92,7 @@ class MasterActor(
     case Increment =>
       completed = completed + 1
 
-    case Error(link) =>
+    case Error =>
       failed = failed + 1
   }
 }
@@ -102,7 +102,7 @@ object MasterActor {
   case class Inside(link: String)
   case class Put(link: String)
   case class Remove(link: String)
-  case class Error(link: String)
+  case object Error
   case object Increment
   case object Status
 }

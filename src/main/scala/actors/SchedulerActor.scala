@@ -67,7 +67,7 @@ class SchedulerActor(
         log.warning(s"Failed downloading a source: $errorDescription")
         throw new DownloadSourceException(errorDescription)
       } else {
-        context.parent ! MasterActor.Error(link)
+        context.parent ! MasterActor.Error
         log.warning(errorDescription)
       }
 
