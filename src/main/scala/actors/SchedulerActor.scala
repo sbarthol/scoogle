@@ -108,7 +108,11 @@ class SchedulerActor(
       firstUrl.getHost == secondUrl.getHost
     } match {
       case Success(sameHost) => sameHost
-      case Failure(_)        => false
+      case Failure(_)        => {
+
+        log.warning(s"Could not determine whether $first and $second have the same host")
+        false
+      }
     }
   }
 }
