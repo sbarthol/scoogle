@@ -65,7 +65,17 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
           request,
           new AsyncCompletionHandler[Response]() {
             override def onCompleted(response: Response): Response = {
-              self ! GetterActor.Done(link, response.getResponseBody(), scheduler)
+
+              if (response.getStatusCode == 200) {
+                self ! GetterActor.Done(link, response.getResponseBody(), scheduler)
+              } else {
+                self ! GetterActor.Error(
+                  link,
+                  new Exception(s"${response.getStatusCode}: ${response.getStatusText}"),
+                  scheduler
+                )
+              }
+
               response
             }
 
