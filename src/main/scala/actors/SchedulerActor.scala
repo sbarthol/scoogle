@@ -40,8 +40,6 @@ class SchedulerActor(
   try {
     if (maxDepth < 0) {
       throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
-    } else if (!urlIsValid(source)) {
-      throw new InitializationException(s"link $source not valid")
     } else {
 
       linkCheckerActor ! LinkCheckerActor.Check(source)
@@ -62,7 +60,8 @@ class SchedulerActor(
 
     case SchedulerActor.Error(link, error) =>
       context.parent ! MasterActor.Remove(link)
-      val errorDescription = s"Get request for link $link failed: ${error.toString}"
+      val errorDescription =
+        s"Get request for link $link failed: ${error.toString}"
       if (source == link) {
         log.warning(s"Failed downloading a source: $errorDescription")
         throw new DownloadSourceException(errorDescription)
@@ -79,8 +78,7 @@ class SchedulerActor(
           distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
 
         if (
-          urlIsValid(newLink)
-          && sameHost(source, newLink)
+          sameHost(source, newLink)
           && parentDistanceToSource + 1 <= maxDepth
           && parentDistanceToSource + 1 < childDistanceToSource
         ) {
@@ -102,22 +100,15 @@ class SchedulerActor(
       getterActor ! GetterActor.Link(link)
   }
 
-  private def urlIsValid(url: String): Boolean = {
-
-    Try {
-      new URL(url).toURI
-    } match {
-      case Success(_) => true
-      case Failure(exception) =>
-        log.warning(s"URL $url not valid: ${exception.getMessage}")
-        false
-    }
-  }
-
   private def sameHost(first: String, second: String): Boolean = {
 
-    val firstUrl = new URL(first)
-    val secondUrl = new URL(second)
-    firstUrl.getHost == secondUrl.getHost
+    Try {
+      val firstUrl = new URL(first)
+      val secondUrl = new URL(second)
+      firstUrl.getHost == secondUrl.getHost
+    } match {
+      case Success(sameHost) => sameHost
+      case Failure(_)        => false
+    }
   }
 }

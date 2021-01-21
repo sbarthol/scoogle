@@ -4,9 +4,10 @@ import actors.DBActor._
 import akka.actor.{Actor, ActorLogging}
 import utils.HBaseConnection
 
-import java.net.{URI, URLDecoder}
+import java.net.{URI, URLDecoder, URLEncoder}
 import java.security.MessageDigest
 import scala.math.{ceil, max}
+import scala.util.{Failure, Success, Try}
 
 class DBActor(
     zooKeeperAddress: String,
@@ -105,16 +106,21 @@ class DBActor(
 
   private def cleanLink(link: String): String = {
 
-    val uri = new URI(link)
-    val noQuery = new URI(
-      uri.getScheme,
-      uri.getAuthority,
-      uri.getPath,
-      null,
-      uri.getFragment
-    ).toString
+    Try {
+      val uri = new URI(URLEncoder.encode(link, "UTF-8"))
+      val noQuery = new URI(
+        uri.getScheme,
+        uri.getAuthority,
+        uri.getPath,
+        null,
+        uri.getFragment
+      ).toString
 
-    URLDecoder.decode(noQuery, "UTF-8")
+      URLDecoder.decode(noQuery, "UTF-8")
+    } match {
+      case Success(cleanLink) => cleanLink
+      case Failure(_)         => link
+    }
   }
 
   private def cleanText(text: String): String = {
