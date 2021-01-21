@@ -12,7 +12,7 @@ object WebCrawler {
 
     val conf = new WebCrawlerConf(args)
     val sources = SourcesLoader.loadFromFiles(filepaths = conf.sourceFilepaths())
-    val system = ActorSystem("Web Crawler")
+    val system = ActorSystem("WebCrawler")
 
     system.actorOf(
       props = Props(
