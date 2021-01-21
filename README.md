@@ -26,7 +26,7 @@ different fields designate the following:
         <depth>3</depth>
     </source>
     <source>
-        <link>file:///path/to/file.txt</link>
+        <link>file:///path/to/file.html</link>
         <depth>1</depth>
     </source>
 </sources>
