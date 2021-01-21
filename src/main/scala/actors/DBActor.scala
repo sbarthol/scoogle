@@ -44,9 +44,10 @@ class DBActor(
     case GetLinks(words: List[String], pageNumber) =>
       val hashes = hbaseConn
         .getHashes(words)
-        .groupMap {case (hash, _) => hash} {case (_, count) => count}
-        .filter {case (_, list) => list.size == words.size}
-        .view.mapValues(_.sum)
+        .groupMap { case (hash, _) => hash } { case (_, count) => count }
+        .filter { case (_, list) => list.size == words.size }
+        .view
+        .mapValues(_.sum)
         .toList
         .sortBy { case (_, count) => -count }
 
@@ -113,7 +114,7 @@ class DBActor(
       uri.getFragment
     ).toString
 
-    URLDecoder.decode(noQuery, "UTF-8" )
+    URLDecoder.decode(noQuery, "UTF-8")
   }
 
   private def cleanText(text: String): String = {
