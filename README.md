@@ -48,6 +48,11 @@ The options are
 
 followed by a list of source xml files in the format described above.
 
+### Terminating
+
+Ideally the program should be terminated with a `SIGTERM` signal rather than `SIGINT`, `SIGABRT` or `SIGKILL` so that
+the HBase connection can close gracefully and flush buffered data.
+
 ### Monitoring
 
 The web crawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping
