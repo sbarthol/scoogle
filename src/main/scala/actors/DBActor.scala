@@ -48,9 +48,9 @@ class DBActor(
         .groupMap { case (hash, _) => hash } { case (_, count) => count }
         .filter { case (_, list) => list.size == words.size }
         .view
-        .mapValues(_.sum)
+        .mapValues(_.min)
         .toList
-        .sortBy { case (_, count) => -count }
+        .sortBy { case (_, count) => - count }
 
       log.debug(s"Found a total of ${hashes.size} links")
       val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
