@@ -76,6 +76,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
       .select("a")
       .asScala
       .map(_.absUrl("href"))
+      .filter(_.length > 0)
       .toList
       .distinct
   }
