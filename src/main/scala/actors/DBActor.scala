@@ -4,7 +4,7 @@ import actors.DBActor._
 import akka.actor.{Actor, ActorLogging}
 import utils.HBaseConnection
 
-import java.net.{URI, URLDecoder, URLEncoder}
+import java.net.URI
 import java.security.MessageDigest
 import scala.math.{ceil, max}
 import scala.util.{Failure, Success, Try}
@@ -107,7 +107,7 @@ class DBActor(
   private def cleanLink(link: String): String = {
 
     Try {
-      val uri = new URI(URLEncoder.encode(link, "UTF-8"))
+      val uri = new URI(link)
       val noQuery = new URI(
         uri.getScheme,
         uri.getAuthority,
@@ -116,7 +116,7 @@ class DBActor(
         uri.getFragment
       ).toString
 
-      URLDecoder.decode(noQuery, "UTF-8")
+      noQuery
     } match {
       case Success(cleanLink) => cleanLink
       case Failure(_)         => link

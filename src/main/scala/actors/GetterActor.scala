@@ -3,7 +3,7 @@ package actors
 import akka.actor.{Actor, ActorRef}
 import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, Response}
 
-import java.net.{URL, URLDecoder}
+import java.net.URL
 import scala.collection.mutable
 import scala.io.Source
 
@@ -50,8 +50,7 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
 
       if (protocol == "file") {
 
-        val decoded = URLDecoder.decode(url.getPath, "UTF-8")
-        val source = Source.fromFile(decoded, "UTF-8")
+        val source = Source.fromFile(url.getPath, "UTF-8")
         val content = source.mkString
         source.close
 
