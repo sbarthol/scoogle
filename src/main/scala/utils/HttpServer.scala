@@ -3,6 +3,7 @@ package utils
 import actors.DBActor
 import actors.ParserActor.extractWords
 import akka.actor.{ActorRef, ActorSystem}
+import akka.http.javadsl.server.PathMatchers.remaining
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Server
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
@@ -14,8 +15,10 @@ import org.slf4j.LoggerFactory
 import spray.json.enrichAny
 import utils.JsonProtocol.responseFormat
 
-import scala.concurrent.ExecutionContext
+import java.net.URLDecoder
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Source
 import scala.util.{Failure, Success}
 
 object HttpServer {
@@ -30,9 +33,10 @@ object HttpServer {
 
     val apiRoute = getApiRoute(dbActor)
     val frontendRoute = getFrontendRoute
+    val fileRoute = getFileRoute
 
     val bindingFuture =
-      Http().newServerAt("0.0.0.0", port).bind(apiRoute ~ frontendRoute)
+      Http().newServerAt("0.0.0.0", port).bind(apiRoute ~ frontendRoute ~ fileRoute)
 
     bindingFuture.onComplete {
       case Success(value) =>
@@ -47,6 +51,35 @@ object HttpServer {
       getFromFile(
         Server.getClass.getResource("/build/index.html").getFile
       )
+    }
+  }
+
+  private def getFileRoute(implicit ec: ExecutionContext): Route = {
+
+    path(remaining.toScala) { path =>
+      get {
+
+        val future = Future {
+          val source =
+            Source.fromFile("/" + URLDecoder.decode(path, "UTF-8"), "UTF-8")
+          val content = source.mkString
+          source.close
+          content
+        }
+
+        onComplete(future) {
+
+          case Success(html) =>
+            log.debug(s"Request succeeded: path = $path")
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
+
+          case Failure(error) =>
+            log.warn(
+              s"Request failed: path = $path, error = ${error.getMessage}"
+            )
+            complete(StatusCodes.InternalServerError, error.getMessage)
+        }
+      }
     }
   }
 

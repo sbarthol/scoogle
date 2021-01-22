@@ -4,7 +4,7 @@ import actors.DBActor._
 import akka.actor.{Actor, ActorLogging}
 import utils.HBaseConnection
 
-import java.net.URI
+import java.net.URL
 import java.security.MessageDigest
 import scala.math.{ceil, max}
 import scala.util.{Failure, Success, Try}
@@ -50,7 +50,7 @@ class DBActor(
         .view
         .mapValues(_.min)
         .toList
-        .sortBy { case (_, count) => - count }
+        .sortBy { case (_, count) => -count }
 
       log.debug(s"Found a total of ${hashes.size} links")
       val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
@@ -64,10 +64,10 @@ class DBActor(
           val (title, text, link) = hbaseConn.getWebsite(hash = hash)
 
           Item(
-            link = link,
+            link = link.replace("file://", ""),
             title = cleanText(title.take(maxTitleLength)),
             text = cleanText(selectTextSegments(text, words)),
-            cleanLink = cleanLink(link)
+            cleanLink = cleanLink(link).replace("file:", "")
           )
         }
 
@@ -107,19 +107,19 @@ class DBActor(
   private def cleanLink(link: String): String = {
 
     Try {
-      val uri = new URI(link)
-      val noQuery = new URI(
-        uri.getScheme,
-        uri.getAuthority,
-        uri.getPath,
-        null,
-        uri.getFragment
+      val url = new URL(link)
+      val noQuery = new URL(
+        url.getProtocol,
+        url.getHost,
+        url.getFile
       ).toString
 
       noQuery
     } match {
       case Success(cleanLink) => cleanLink
-      case Failure(_)         => link
+      case Failure(t) =>
+        log.warning(s"Error cleaning link: ${t.toString}")
+        link
     }
   }
 
