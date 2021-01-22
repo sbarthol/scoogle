@@ -1,8 +1,7 @@
 package actors
 
 import actors.MasterActor._
-import actors.SchedulerActor.{DownloadSourceException, InitializationException}
-import akka.actor.SupervisorStrategy.{Restart, Stop}
+import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
 import source.Source
 import utils.NettyClient
@@ -18,10 +17,8 @@ class MasterActor(
     with ActorLogging {
 
   override val supervisorStrategy: OneForOneStrategy =
-    OneForOneStrategy(maxNrOfRetries = 3, loggingEnabled = false) {
-      case _: InitializationException => Stop
-      case _: DownloadSourceException => Restart
-      case _: Exception               => Stop
+    OneForOneStrategy(maxNrOfRetries = 3, loggingEnabled = true) { case _: Exception =>
+      Stop
     }
 
   private val downloading = new mutable.HashSet[String]

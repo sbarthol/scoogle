@@ -13,9 +13,6 @@ object SchedulerActor {
   case class Error(link: String, error: Throwable)
   case class NewLinks(link: String, newLinks: List[String])
   case class CheckedLink(link: String)
-
-  class InitializationException(message: String) extends Exception(message)
-  class DownloadSourceException(message: String) extends Exception(message)
 }
 
 class SchedulerActor(
@@ -35,19 +32,12 @@ class SchedulerActor(
       )
     )
 
-  log.debug(s"Attempt to start new scheduler actor for source: $source")
-
-  try {
-    if (maxDepth < 0) {
-      throw new InitializationException(s"maxDepth $maxDepth is smaller than 0")
-    } else {
-
-      linkCheckerActor ! LinkCheckerActor.Check(source)
-      distanceToSource.put(source, 0)
-    }
-  } catch {
-    case e: Throwable =>
-      log.error(s"Error when initializing a scheduler: ${e.getMessage}")
+  if (maxDepth < 0) {
+    log.error(s"maxDepth $maxDepth is smaller than 0")
+    context.stop(self)
+  } else {
+    linkCheckerActor ! LinkCheckerActor.Check(source)
+    distanceToSource.put(source, 0)
   }
 
   override def receive: Receive = {
@@ -60,15 +50,8 @@ class SchedulerActor(
 
     case SchedulerActor.Error(link, error) =>
       context.parent ! MasterActor.Remove(link)
-      val errorDescription =
-        s"Get request for link $link failed: ${error.toString}"
-      if (source == link) {
-        log.warning(s"Failed downloading a source: $errorDescription")
-        throw new DownloadSourceException(errorDescription)
-      } else {
-        context.parent ! MasterActor.Error
-        log.warning(errorDescription)
-      }
+      context.parent ! MasterActor.Error
+      log.warning(s"Get request for link $link failed: ${error.toString}")
 
     case NewLinks(link, newLinks) =>
       newLinks.foreach(newLink => {
@@ -108,11 +91,9 @@ class SchedulerActor(
       firstUrl.getHost == secondUrl.getHost
     } match {
       case Success(sameHost) => sameHost
-      case Failure(_)        => {
-
+      case Failure(_) =>
         log.warning(s"Could not determine whether $first and $second have the same host")
         false
-      }
     }
   }
 }
