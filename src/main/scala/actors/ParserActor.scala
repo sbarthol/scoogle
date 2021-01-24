@@ -15,7 +15,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
     val text = getText(html)
     val title = getTitle(html)
-    val words = getWords(text)
+    val words = getWords(title + text)
 
     log.debug(s"Link $link contains title $title text $text")
 
