@@ -15,7 +15,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
 
     val text = getText(html)
     val title = getTitle(html)
-    val words = getWords(title + text)
+    val words = getWords(title = title, text = text)
 
     log.debug(s"Link $link contains title $title text $text")
 
@@ -59,14 +59,29 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
     }
   }
 
-  private def getWords(text: String): List[(String, Int)] = {
+  private def getWords(
+      title: String,
+      text: String
+  ): List[(String, Int)] = {
+
+    val titleWords = extractWords(title)
+      .groupBy(identity)
+      .view
+      .mapValues(_.size * 4)
+      .toList
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
-    extractWords(text)
+    val textWords = extractWords(text)
       .groupBy(identity)
       .view
       .mapValues(_.size)
       .toList
+
+    (titleWords ++ textWords).groupMapReduce { case (word, _) =>
+      word
+    } { case (_, count) =>
+      count
+    }(_ + _).toList
   }
 
   private def getLinks(html: String, link: String): List[String] = {
@@ -76,7 +91,7 @@ class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
       .select("a")
       .asScala
       .map(_.absUrl("href"))
-      .filter(_.length > 0)
+      .filter(_.nonEmpty)
       .toList
       .distinct
   }
