@@ -17,6 +17,7 @@ class DBActor(
 
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
+  private val maxTextLength = 2000
 
   private val hbaseConn =
     HBaseConnection.init(
@@ -79,21 +80,22 @@ class DBActor(
       if (bold) sb.addAll("</strong>")
     }
 
-    for (i <- 0 until words.length) {
-      if (keywords.exists(words(i).toLowerCase.startsWith)) { // Todo: mieux que ca ?
+    for {
+      i <- 0 until words.length
+      if sb.size < maxTextLength
+      if keywords.exists(words(i).toLowerCase.startsWith)
+    } {
 
-        val start = math.max(0, i - numberWrappingWords)
-        val end = math.min(i + numberWrappingWords, words.length - 1)
+      val start = math.max(0, i - numberWrappingWords)
+      val end = math.min(i + numberWrappingWords, words.length - 1)
 
-        for (j <- start until end) {
-          addToSb(words(j), i == j)
-          sb.addOne(' ')
-        }
-        addToSb(words(end), i == end)
-        sb.addAll("... ")
+      for (j <- start until end) {
+        addToSb(words(j), i == j)
+        sb.addOne(' ')
       }
+      addToSb(words(end), i == end)
+      sb.addAll("... ")
     }
-
     sb.toString
   }
 
