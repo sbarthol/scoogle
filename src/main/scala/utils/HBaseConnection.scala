@@ -5,6 +5,7 @@ import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
 import utils.HBaseConnection.log
 
+import scala.collection.mutable
 import scala.jdk.CollectionConverters.{IteratorHasAsScala, SeqHasAsJava}
 
 object HBaseConnection {
@@ -115,28 +116,59 @@ class HBaseConnection private (
 
   def getHashes(words: List[String]): List[(String, Int)] = {
 
-    words.flatMap(word => {
+    // Todo: even better create a DB with word -> number of websites containing that word
+    val descendingOrder = words.sortBy(-_.length)
+    val longestWord = descendingOrder.head
+    log.debug(s"Longest word = $longestWord")
 
-      val scan = new Scan()
-      scan.setRowPrefixFilter((word + "_").getBytes)
-      val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
+    val matchedLinks = mutable.Map[String, Int]()
 
-      log.debug(
-        s"""Found ${rows.size} links
-           |for request word = $word""".stripMargin
-      )
+    val scan = new Scan()
+    scan.setRowPrefixFilter((longestWord + "_").getBytes)
+    val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
 
-      val links = rows.map(row => {
+    log.debug(
+      s"""Found ${rows.size} links
+         |for request longest word = $longestWord""".stripMargin
+    )
 
-        val List(word, hash) = new String(row.getRow).split("_").toList
-        val count =
-          Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
+    rows.foreach(row => {
 
-        log.debug(s"Word $word is contained $count times in hash $hash")
-        (hash, count)
-      })
+      val List(_, hash) = new String(row.getRow).split("_").toList
+      val count =
+        Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
 
-      links
+      matchedLinks.put(key = hash, value = count)
     })
+
+    descendingOrder.tail.foreach(word => {
+
+      val hashes = matchedLinks.keys.toList
+
+      val gets = hashes
+        .map(hash => {
+
+          val row = word + "_" + hash
+          val get = new Get(row.getBytes)
+          get.addColumn("index".getBytes, "count".getBytes)
+          get
+        })
+
+      val results = invertedIndexTable.get(gets.asJava)
+
+      results.zip(hashes).foreach { case (result, hash) =>
+        if (result.isEmpty) {
+          matchedLinks.remove(hash)
+        } else {
+
+          val count = Integer
+            .valueOf(new String(CellUtil.cloneValue(result.rawCells().head)), 16)
+            .toInt
+          matchedLinks.put(key = hash, value = math.min(matchedLinks(hash), count))
+        }
+      }
+    })
+
+    matchedLinks.toList.sortBy { case (_, count) => -count }
   }
 }

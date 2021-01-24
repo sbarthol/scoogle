@@ -43,14 +43,7 @@ class DBActor(
       log.debug(s"Link $link put in database")
 
     case GetLinks(words: List[String], pageNumber) =>
-      val hashes = hbaseConn
-        .getHashes(words)
-        .groupMap { case (hash, _) => hash } { case (_, count) => count }
-        .filter { case (_, list) => list.size == words.size }
-        .view
-        .mapValues(_.min)
-        .toList
-        .sortBy { case (_, count) => -count }
+      val hashes = hbaseConn.getHashes(words)
 
       log.debug(s"Found a total of ${hashes.size} links")
       val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
