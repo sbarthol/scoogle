@@ -5,7 +5,6 @@ import actors.ParserActor.extractWords
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.javadsl.server.PathMatchers.remaining
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.Server
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -47,10 +46,8 @@ object HttpServer {
 
   private def getFrontendRoute: Route = {
 
-    getFromDirectory(Server.getClass.getResource("/build").getPath) ~ path("") {
-      getFromFile(
-        Server.getClass.getResource("/build/index.html").getFile
-      )
+    getFromResourceDirectory("build") ~ path("") {
+      getFromResource("build/index.html")
     }
   }
 
