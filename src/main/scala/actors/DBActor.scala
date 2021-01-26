@@ -121,7 +121,7 @@ class DBActor(
   private def cleanText(text: String): String = {
 
     text
-      .replace('�', ' ')
+      .replace('\uFFFD', ' ')
       .replace("\\", "")
       .trim
       .replaceAll(" +", " ")
