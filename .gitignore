@@ -7,3 +7,4 @@ target
 .bloop
 build
 *.iml
+dependency-reduced-pom.xml

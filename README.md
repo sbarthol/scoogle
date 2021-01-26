@@ -34,9 +34,7 @@ different fields designate the following:
 
 ### Running
 
-Run the `WebCrawler.scala` file with the following command line arguments:
-
-`<options> <source1> <source2> ...`
+After running `mvn clean package`, run `java -jar ./target/web-crawler.jar [options] [source ...]`
 
 The options are
 
@@ -79,7 +77,9 @@ An *Akka HTTP* server runs and serves the following routes:
 
 #
 
-Run the `Server.scala` file with the following options:
+After running `mvn clean package`, run `java -jar ./target/server.jar [options]`
+
+The options are
 
 - `--port` The port number on which the server listens.
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
