@@ -20,6 +20,7 @@ different fields designate the following:
 - `depth` The depth up to which each source will be crawled.
 
 ```xml
+
 <sources>
     <source>
         <link>https://www.wikipedia.com</link>
@@ -40,8 +41,8 @@ The options are
 
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
 - `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults to `2181`.
-- `--maxConcurrentSockets` The maximum number of sockets that the program will open simultaneously. Defaults to 30. Sometimes if
-  this number is too large, the requests will time out.
+- `--maxConcurrentSockets` The maximum number of sockets that the program will open simultaneously. Defaults to 30.
+  Sometimes if this number is too large, the requests will time out.
 - `-h, --help` Show help message.
 
 followed by a list of source xml files in the format described above.
@@ -57,6 +58,10 @@ The web crawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](http
 endpoint on ` http://localhost:9095`. A Prometheus server can be started in order to view the various Akka metrics.
 
 ![prometheus](https://drive.google.com/uc?id=1PFvHFVYTiBU629cWccnwKlS08UEW6Blr)
+
+### Benchmark
+
+The web crawler is able to crawl and store approximately 35 pages per second on a `e2-standard-4` GCE instance.
 
 ## Frontend written in *React*
 
