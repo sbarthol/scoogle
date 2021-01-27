@@ -35,7 +35,7 @@ object HttpServer {
     val fileRoute = getFileRoute
 
     val bindingFuture =
-      Http().newServerAt("0.0.0.0", port).bind(apiRoute ~ frontendRoute ~ fileRoute)
+      Http().newServerAt("127.0.0.1", port).bind(apiRoute ~ frontendRoute ~ fileRoute)
 
     bindingFuture.onComplete {
       case Success(value) =>
