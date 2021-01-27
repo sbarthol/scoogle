@@ -22,7 +22,7 @@ class WebCrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val zooKeeperAddress = opt[String](
     name = "zooKeeperAddress",
     noshort = true,
-    descr = "The address of the ZooKeeper Quorum server. Defaults 'localhost'",
+    descr = "The address of the ZooKeeper Quorum server. Defaults to 'localhost'.",
     default = Some("localhost"),
     validate = _.nonEmpty,
     argName = "addr"
@@ -31,7 +31,7 @@ class WebCrawlerConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val zooKeeperPort = opt[Int](
     name = "zooKeeperPort",
     noshort = true,
-    descr = "The port of the ZooKeeper Quorum server. Defaults '2181'",
+    descr = "The port of the ZooKeeper Quorum server. Defaults to 2181.",
     default = Some(2181),
     validate = p => { p >= 0 && p <= (1 << 16) },
     argName = "port"

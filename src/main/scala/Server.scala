@@ -23,7 +23,7 @@ object Server {
       name = "db"
     )
 
-    HttpServer.startServer(port = conf.port())
+    HttpServer.startServer(interface = conf.serverInterface(), port = conf.serverPort())
   }
 
   private class Server

@@ -39,9 +39,9 @@ After running `mvn clean package`, run `java -jar ./target/web-crawler.jar [opti
 The options are
 
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
-- `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
-- `--maxConcurrentSockets` The maximum number of TCP sockets that the program will open simultaneously. Sometimes if
-  this number is too large, the requests will time out. The default is 30.
+- `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults to `2181`.
+- `--maxConcurrentSockets` The maximum number of sockets that the program will open simultaneously. Defaults to 30. Sometimes if
+  this number is too large, the requests will time out.
 - `-h, --help` Show help message.
 
 followed by a list of source xml files in the format described above.
@@ -81,7 +81,8 @@ After running `mvn clean package`, run `java -jar ./target/server.jar [options]`
 
 The options are
 
-- `--port` The port number on which the server listens.
+- `--serverInterface` The interface on which the server listens. Defaults to `localhost`.
+- `--serverPort` The port number on which the server listens. Defaults to `8080`.
 - `--zooKeeperAddress` The address of the ZooKeeper Quorum server. Defaults to `localhost`.
-- `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults `2181`.
+- `--zooKeeperPort` The port of the ZooKeeper Quorum server. Defaults to `2181`.
 - `-h, --help` Show help message.

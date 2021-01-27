@@ -24,7 +24,7 @@ object HttpServer {
 
   private val log = LoggerFactory.getLogger(classOf[HttpServer])
 
-  def startServer(port: Int)(implicit
+  def startServer(interface: String, port: Int)(implicit
       ec: ExecutionContext,
       system: ActorSystem,
       dbActor: ActorRef
@@ -35,7 +35,7 @@ object HttpServer {
     val fileRoute = getFileRoute
 
     val bindingFuture =
-      Http().newServerAt("127.0.0.1", port).bind(apiRoute ~ frontendRoute ~ fileRoute)
+      Http().newServerAt(interface, port).bind(apiRoute ~ frontendRoute ~ fileRoute)
 
     bindingFuture.onComplete {
       case Success(value) =>
