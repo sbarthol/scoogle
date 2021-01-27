@@ -6,7 +6,7 @@ in React. The HBase master, ZooKeeper and servers need to be started first, eith
 local filesystem or on HDFS. The address and port number of the ZooKeeper Quorum server are given to the Scoogle web
 crawler and server.
 
-![demo](https://drive.google.com/uc?id=1A-X3PufeiBJ8SwROvygW2IEwrOQnnHvm)
+![demo](https://drive.google.com/uc?id=1eOKPdRUDRmxP7IAog-ZXgY0aY-OsEtcl)
 
 ## Web Crawler based on *Akka Actors*
 
