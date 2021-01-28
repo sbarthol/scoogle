@@ -45,16 +45,19 @@ class DBActor(
       log.debug(s"Link $link put in database")
 
     case GetLinks(words: List[String], pageNumber) =>
+      val startMoment = System.currentTimeMillis
 
       val hashes = words match {
         case w if w.isEmpty => List.empty
-        case _ => hbaseConn.getHashes(words).take(maxItems)
+        case _              => hbaseConn.getHashes(words)
       }
 
-      log.debug(s"Found a total of ${hashes.size} links")
-      val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
+      val trimmedHashes = hashes.take(maxItems)
 
-      val slice = hashes
+      log.debug(s"Found a total of ${trimmedHashes.size} links")
+      val nPages = max(1, ceil(trimmedHashes.size / maxLinksPerPage.toDouble).toInt)
+
+      val slice = trimmedHashes
         .slice(
           from = maxLinksPerPage * (pageNumber - 1),
           until = maxLinksPerPage * pageNumber
@@ -70,7 +73,13 @@ class DBActor(
           )
         }
 
-      sender ! Response(links = slice, totalPages = totalPages)
+      val endMoment = System.currentTimeMillis
+      sender ! Response(
+        links = slice,
+        nPages = nPages,
+        nResults = hashes.size,
+        processingTimeMillis = endMoment - startMoment
+      )
   }
 
   private def selectTextSegments(text: String, keywords: List[String]): String = {
@@ -136,7 +145,12 @@ class DBActor(
 object DBActor {
 
   case class Put(words: List[(String, Int)], link: String, text: String, title: String)
-  case class Response(links: List[Item], totalPages: Int)
+  case class Response(
+      links: List[Item],
+      nPages: Int,
+      nResults: Int,
+      processingTimeMillis: Long
+  )
   case class GetLinks(words: List[String], pageNumber: Int)
   case class Item(
       cleanLink: String,

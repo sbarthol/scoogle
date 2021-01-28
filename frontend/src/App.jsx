@@ -8,13 +8,14 @@ import Header from "./components/Header";
 import Pagination from "./components/Pagination";
 import NoResults from "./components/NoResults";
 import Error from "./components/Error";
+import Banner from "./components/Banner";
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       links: [],
-      totalPages: 1,
+      nPages: 1,
       showHomePage: true,
       searchBarText: "",
       searchText: "",
@@ -62,7 +63,7 @@ class App extends React.Component {
   getSearchResults(query, pageNumber) {
     this.setState({
       links: [],
-      totalPages: 1,
+      nPages: 1,
       showHomePage: false,
       loading: true,
       error: false,
@@ -78,9 +79,11 @@ class App extends React.Component {
           .then((searchResults) => {
             this.setState({
               links: searchResults.links,
-              totalPages: searchResults.totalPages,
+              nPages: searchResults.nPages,
               showHomePage: false,
               loading: false,
+              nResults: searchResults.nResults,
+              processingTimeMillis: searchResults.processingTimeMillis,
             });
           })
           .catch(console.log);
@@ -152,10 +155,15 @@ class App extends React.Component {
             handleSearchBarChange={this.handleSearchBarChange}
             onKeyDown={this.onKeyDown}
           />
+          <Banner
+            nResults={this.state.nResults}
+            selectedPage={this.state.selectedPage}
+            processingTimeMillis={this.state.processingTimeMillis}
+          />
           <SearchResults links={this.state.links} />
-          {this.state.totalPages >= 2 && (
+          {this.state.nPages >= 2 && (
             <Pagination
-              numberOfOs={this.state.totalPages}
+              numberOfOs={this.state.nPages}
               selectedO={this.state.selectedPage}
               getSearchResultsForPage={(p) => {
                 this.setState({ selectedPage: p });
