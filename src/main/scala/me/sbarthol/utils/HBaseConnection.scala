@@ -114,6 +114,70 @@ class HBaseConnection private (
     }.asJava)
   }
 
+  private def intersection(
+      matchedLinks: mutable.Map[String, Int],
+      newWord: String
+  ): Unit = {
+
+    val newMatchedLinks = getScan(newWord)
+    matchedLinks.keys.foreach(hash => {
+      if (newMatchedLinks.contains(hash)) {
+        matchedLinks
+          .put(key = hash, value = math.min(matchedLinks(hash), newMatchedLinks(hash)))
+      } else {
+        matchedLinks.remove(key = hash)
+      }
+    })
+  }
+
+  private def reduction(matchedLinks: mutable.Map[String, Int], newWord: String): Unit = {
+
+    val hashes = matchedLinks.keys.toList
+
+    val gets = hashes
+      .map(hash => {
+
+        val row = newWord + "_" + hash
+        val get = new Get(row.getBytes)
+        get.addColumn("index".getBytes, "count".getBytes)
+        get
+      })
+
+    val results = invertedIndexTable.get(gets.asJava)
+
+    results.zip(hashes).foreach { case (result, hash) =>
+      if (result.isEmpty) {
+        matchedLinks.remove(hash)
+      } else {
+
+        val count = Integer
+          .valueOf(new String(CellUtil.cloneValue(result.rawCells().head)), 16)
+          .toInt
+
+        matchedLinks.put(key = hash, value = math.min(matchedLinks(hash), count))
+      }
+    }
+  }
+
+  private def getScan(word: String): mutable.Map[String, Int] = {
+
+    val matchedLinks = mutable.Map[String, Int]()
+
+    val scan = new Scan()
+    scan.setRowPrefixFilter((word + "_").getBytes)
+    val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
+
+    rows.foreach(row => {
+
+      val List(_, hash) = new String(row.getRow).split("_").toList
+      val count =
+        Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
+      matchedLinks.put(key = hash, value = count)
+    })
+
+    matchedLinks
+  }
+
   def getHashes(words: List[String]): List[(String, Int)] = {
 
     // Todo: even better create a DB with word -> number of websites containing that word
@@ -121,52 +185,16 @@ class HBaseConnection private (
     val longestWord = descendingOrder.head
     log.debug(s"Longest word = $longestWord")
 
-    val matchedLinks = mutable.Map[String, Int]()
-
-    val scan = new Scan()
-    scan.setRowPrefixFilter((longestWord + "_").getBytes)
-    val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
+    val matchedLinks = getScan(longestWord)
 
     log.debug(
-      s"""Found ${rows.size} links
+      s"""Found ${matchedLinks.size} links
          |for request longest word = $longestWord""".stripMargin
     )
 
-    rows.foreach(row => {
-
-      val List(_, hash) = new String(row.getRow).split("_").toList
-      val count =
-        Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
-
-      matchedLinks.put(key = hash, value = count)
-    })
-
     descendingOrder.tail.foreach(word => {
-
-      val hashes = matchedLinks.keys.toList
-
-      val gets = hashes
-        .map(hash => {
-
-          val row = word + "_" + hash
-          val get = new Get(row.getBytes)
-          get.addColumn("index".getBytes, "count".getBytes)
-          get
-        })
-
-      val results = invertedIndexTable.get(gets.asJava)
-
-      results.zip(hashes).foreach { case (result, hash) =>
-        if (result.isEmpty) {
-          matchedLinks.remove(hash)
-        } else {
-
-          val count = Integer
-            .valueOf(new String(CellUtil.cloneValue(result.rawCells().head)), 16)
-            .toInt
-          matchedLinks.put(key = hash, value = math.min(matchedLinks(hash), count))
-        }
-      }
+      if (matchedLinks.size > 500) intersection(matchedLinks, word)
+      else reduction(matchedLinks, word)
     })
 
     matchedLinks.toList.sortBy { case (_, count) => -count }
