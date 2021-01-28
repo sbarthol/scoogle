@@ -1,3 +1,5 @@
+package me.sbarthol
+
 import actors.DBActor
 import akka.actor.{ActorSystem, Props}
 import conf.ServerConf

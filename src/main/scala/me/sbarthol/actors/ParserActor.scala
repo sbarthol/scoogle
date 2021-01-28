@@ -1,7 +1,7 @@
-package actors
+package me.sbarthol.actors
 
-import actors.ParserActor._
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import me.sbarthol.actors.ParserActor.{Body, extractWords}
 import org.jsoup.Jsoup
 
 import scala.jdk.CollectionConverters._

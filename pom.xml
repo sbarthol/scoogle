@@ -2,7 +2,7 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>me.sbarthol</groupId>
     <artifactId>Scoogle</artifactId>
     <version>0.0.1</version>
 
@@ -54,7 +54,7 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>WebCrawler</Main-Class>
+                                        <Main-Class>me.sbarthol.WebCrawler</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -76,7 +76,7 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>Server</Main-Class>
+                                        <Main-Class>me.sbarthol.Server</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>

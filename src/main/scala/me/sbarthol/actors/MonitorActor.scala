@@ -1,7 +1,7 @@
-package actors
+package me.sbarthol.actors
 
-import actors.MonitorActor.Status
 import akka.actor.{Actor, ActorLogging}
+import me.sbarthol.actors.MonitorActor.Status
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.{FiniteDuration, SECONDS}

@@ -1,7 +1,7 @@
-package actors
+package me.sbarthol.actors
 
-import actors.SchedulerActor._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import me.sbarthol.actors.SchedulerActor.{CheckedLink, Done, Error, NewLinks}
 
 import java.net.URL
 import scala.collection.mutable
@@ -42,13 +42,13 @@ class SchedulerActor(
 
   override def receive: Receive = {
 
-    case SchedulerActor.Done(link, body) =>
+    case Done(link, body) =>
       log.debug(s"Received Done($link)")
       context.parent ! MasterActor.Remove(link)
       context.parent ! MasterActor.Increment
       parserActor ! ParserActor.Body(link, body)
 
-    case SchedulerActor.Error(link, error) =>
+    case Error(link, error) =>
       context.parent ! MasterActor.Remove(link)
       context.parent ! MasterActor.Error
       log.warning(s"Get request for link $link failed: ${error.toString}")

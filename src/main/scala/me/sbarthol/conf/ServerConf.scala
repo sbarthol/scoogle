@@ -1,4 +1,4 @@
-package conf
+package me.sbarthol.conf
 
 import org.rogach.scallop.ScallopConf
 

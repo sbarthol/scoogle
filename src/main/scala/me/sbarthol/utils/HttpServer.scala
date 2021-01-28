@@ -1,7 +1,7 @@
-package utils
+package me.sbarthol.utils
 
-import actors.DBActor
-import actors.ParserActor.extractWords
+import me.sbarthol.actors.DBActor
+import me.sbarthol.actors.ParserActor.extractWords
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.javadsl.server.PathMatchers.remaining
 import akka.http.scaladsl.Http
@@ -12,7 +12,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import org.slf4j.LoggerFactory
 import spray.json.enrichAny
-import utils.JsonProtocol.responseFormat
+import me.sbarthol.utils.JsonProtocol.responseFormat
 
 import java.net.URLDecoder
 import scala.concurrent.duration.{FiniteDuration, SECONDS}

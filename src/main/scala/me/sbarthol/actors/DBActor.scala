@@ -1,8 +1,8 @@
-package actors
+package me.sbarthol.actors
 
-import actors.DBActor._
 import akka.actor.{Actor, ActorLogging}
-import utils.HBaseConnection
+import me.sbarthol.actors.DBActor.{GetLinks, Item, Put, Response}
+import me.sbarthol.utils.HBaseConnection
 
 import java.net.URL
 import java.security.MessageDigest

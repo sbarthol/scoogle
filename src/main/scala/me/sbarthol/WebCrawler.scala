@@ -1,3 +1,5 @@
+package me.sbarthol
+
 import actors.MasterActor
 import akka.actor.{ActorSystem, Props}
 import conf.WebCrawlerConf

@@ -1,9 +1,9 @@
-package utils
+package me.sbarthol.utils
 
+import me.sbarthol.utils.HBaseConnection.log
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
 import org.slf4j.LoggerFactory
-import utils.HBaseConnection.log
 
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.{IteratorHasAsScala, SeqHasAsJava}

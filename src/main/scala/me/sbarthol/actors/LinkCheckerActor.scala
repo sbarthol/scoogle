@@ -1,7 +1,7 @@
-package actors
+package me.sbarthol.actors
 
-import actors.LinkCheckerActor.Check
 import akka.actor.{Actor, ActorLogging}
+import me.sbarthol.actors.LinkCheckerActor.Check
 
 import scala.collection.mutable
 

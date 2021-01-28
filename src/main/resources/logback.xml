@@ -18,10 +18,10 @@
 
     <logger name="akka" level="WARN"/>
     <logger name="akka.actor.DeadLetterActorRef" level="INFO"/>
-    <logger name="utils.HttpServer" level="DEBUG"/>
-    <logger name="actors.SchedulerActor" level="ERROR"/>
-    <logger name="utils.HBaseConnection" level="INFO"/>
-    <logger name="actors.DBActor" level="INFO"/>
+    <logger name="me.sbarthol.utils.HttpServer" level="DEBUG"/>
+    <logger name="me.sbarthol.actors.SchedulerActor" level="ERROR"/>
+    <logger name="me.sbarthol.utils.HBaseConnection" level="INFO"/>
+    <logger name="me.sbarthol.actors.DBActor" level="INFO"/>
     <logger name="com.ning" level="WARN"/>
     <logger name="org.apache" level="WARN"/>
 </configuration>

@@ -1,4 +1,4 @@
-package utils
+package me.sbarthol.utils
 
 import com.ning.http.client.{AsyncHttpClient, AsyncHttpClientConfig}
 

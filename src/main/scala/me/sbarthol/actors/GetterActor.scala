@@ -1,4 +1,4 @@
-package actors
+package me.sbarthol.actors
 
 import akka.actor.{Actor, ActorRef}
 import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, Response}

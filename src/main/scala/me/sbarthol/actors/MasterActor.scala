@@ -1,10 +1,10 @@
-package actors
+package me.sbarthol.actors
 
-import actors.MasterActor._
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
-import source.Source
-import utils.NettyClient
+import me.sbarthol.actors.MasterActor.{Increment, Inside, Put, Remove, Status, Error}
+import me.sbarthol.source.Source
+import me.sbarthol.utils.NettyClient
 
 import scala.collection.mutable
 

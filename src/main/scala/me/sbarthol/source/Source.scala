@@ -1,4 +1,4 @@
-package source
+package me.sbarthol.source
 import scala.xml.XML
 
 case class Source(link: String, depth: Int)

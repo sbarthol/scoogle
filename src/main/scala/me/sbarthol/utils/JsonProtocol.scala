@@ -1,6 +1,6 @@
-package utils
+package me.sbarthol.utils
 
-import actors.DBActor
+import me.sbarthol.actors.DBActor
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object JsonProtocol extends DefaultJsonProtocol {
