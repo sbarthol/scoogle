@@ -22,20 +22,24 @@
   width: 20px;
   border: 0;
   margin: 0;
+  padding: 0;
   background: white;
-  font-size: 13px;
+  font-size: 14px;
   text-decoration: none;
   cursor: pointer;
+  text-align: center;
 }
 
 .OBtnSelected {
   width: 20px;
   border: 0;
   margin: 0;
+  padding: 0;
   font-weight: bold;
   background: white;
-  font-size: 13px;
+  font-size: 14px;
   text-decoration: none;
+  text-align: center;
 }
 
 .OBtn:hover {
@@ -62,7 +66,7 @@
   margin: 0 0 auto 0;
   width: 65px;
   background: white;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
 }
 
