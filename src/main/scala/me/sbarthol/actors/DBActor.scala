@@ -18,6 +18,7 @@ class DBActor(
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
   private val maxTextLength = 2000
+  private val maxItems = 99 * maxLinksPerPage
 
   private val hbaseConn =
     HBaseConnection.init(
@@ -44,7 +45,11 @@ class DBActor(
       log.debug(s"Link $link put in database")
 
     case GetLinks(words: List[String], pageNumber) =>
-      val hashes = if (words.isEmpty) List.empty else hbaseConn.getHashes(words)
+
+      val hashes = words match {
+        case w if w.isEmpty => List.empty
+        case _ => hbaseConn.getHashes(words).take(maxItems)
+      }
 
       log.debug(s"Found a total of ${hashes.size} links")
       val totalPages = max(1, ceil(hashes.size / maxLinksPerPage.toDouble).toInt)
