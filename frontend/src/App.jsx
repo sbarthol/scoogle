@@ -67,7 +67,9 @@ class App extends React.Component {
       loading: true,
       error: false,
     });
-    const apiUrl = `/api?query=${query}&pageNumber=${pageNumber}`;
+    const apiUrl = `/api?query=${encodeURIComponent(
+      query
+    )}&pageNumber=${pageNumber}`;
 
     fetch(apiUrl).then((res) => {
       if (res.status === 200) {

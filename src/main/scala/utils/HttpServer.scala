@@ -93,7 +93,8 @@ object HttpServer {
 
           (query, pageNumber) => {
 
-            val keywords = extractWords(query).distinct
+            val decodedQuery = URLDecoder.decode(query, "UTF-8")
+            val keywords = extractWords(decodedQuery).distinct
 
             val future = (dbActor ? DBActor.GetLinks(keywords, pageNumber))
               .mapTo[DBActor.Response]
