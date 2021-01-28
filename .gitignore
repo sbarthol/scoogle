@@ -8,3 +8,5 @@ target
 build
 *.iml
 dependency-reduced-pom.xml
+nginx.conf
+sources
