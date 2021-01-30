@@ -6,12 +6,12 @@ import org.jsoup.Jsoup
 
 import scala.jdk.CollectionConverters._
 
-class ParserActor(dbActor: ActorRef) extends Actor with ActorLogging {
+class ParserActor(dbActor: ActorRef, schedulerActor: ActorRef) extends Actor with ActorLogging {
 
   private val minimumElementTextLength = 10
 
   override def receive: Receive = { case Body(link, html) =>
-    context.parent ! SchedulerActor.NewLinks(link, getLinks(html, link))
+    schedulerActor ! SchedulerActor.NewLinks(link, getLinks(html, link))
 
     val text = getText(html)
     val title = getTitle(html)
