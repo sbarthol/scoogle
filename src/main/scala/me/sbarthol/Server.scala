@@ -3,7 +3,7 @@ package me.sbarthol
 import actors.DBActor
 import akka.actor.{ActorSystem, Props}
 import conf.ServerConf
-import utils.HttpServer
+import utils.{HBaseConnection, HttpServer}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -15,12 +15,19 @@ object Server {
     implicit val system: ActorSystem = ActorSystem("Server")
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
+    val hbaseConn =
+      HBaseConnection.init(
+        zooKeeperAddress = conf.zooKeeperAddress(),
+        zooKeeperPort = conf.zooKeeperPort()
+      )
+
+    sys.addShutdownHook {
+      hbaseConn.close()
+    }
+
     implicit val dbActor = system.actorOf(
       props = Props(
-        new DBActor(
-          zooKeeperAddress = conf.zooKeeperAddress(),
-          zooKeeperPort = conf.zooKeeperPort()
-        )
+        new DBActor(hbaseConn)
       ),
       name = "db"
     )

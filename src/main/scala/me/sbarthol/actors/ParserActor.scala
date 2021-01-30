@@ -6,7 +6,9 @@ import org.jsoup.Jsoup
 
 import scala.jdk.CollectionConverters._
 
-class ParserActor(dbActor: ActorRef, schedulerActor: ActorRef) extends Actor with ActorLogging {
+class ParserActor(dbActorManager: ActorRef, schedulerActor: ActorRef)
+    extends Actor
+    with ActorLogging {
 
   private val minimumElementTextLength = 10
 
@@ -21,7 +23,7 @@ class ParserActor(dbActor: ActorRef, schedulerActor: ActorRef) extends Actor wit
 
     if (words.nonEmpty) {
 
-      dbActor ! DBActor.Put(
+      dbActorManager ! DBActor.Put(
         words = words,
         link = link,
         text = text,

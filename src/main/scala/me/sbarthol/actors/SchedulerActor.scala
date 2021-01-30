@@ -19,7 +19,7 @@ object SchedulerActor {
 class SchedulerActor(
     source: String,
     maxDepth: Int,
-    dbActor: ActorRef,
+    dbActorManager: ActorRef,
     getterActor: ActorRef,
     linkCheckerActor: ActorRef
 ) extends Actor
@@ -30,7 +30,9 @@ class SchedulerActor(
   private val parserActorManager =
     context.actorOf(
       RoundRobinPool(10).props(
-        Props(new ParserActor(dbActor = dbActor, schedulerActor = context.self))
+        Props(
+          new ParserActor(dbActorManager = dbActorManager, schedulerActor = context.self)
+        )
       ),
       "ParserActorManager"
     )

@@ -10,7 +10,6 @@ class LinkCheckerActor extends Actor with ActorLogging {
   private val downloaded = new mutable.HashSet[String]()
 
   override def receive: Receive = { case Check(links) =>
-
     val notContained = links.filterNot(downloaded.contains)
     downloaded.addAll(notContained)
     sender ! SchedulerActor.CheckedLinks(notContained)

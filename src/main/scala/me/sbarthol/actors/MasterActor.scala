@@ -2,9 +2,10 @@ package me.sbarthol.actors
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
+import akka.routing.RoundRobinPool
 import me.sbarthol.actors.MasterActor.{Error, Increment, Put, Remove, Status}
 import me.sbarthol.source.Source
-import me.sbarthol.utils.NettyClient
+import me.sbarthol.utils.{HBaseConnection, NettyClient}
 
 class MasterActor(
     sources: List[Source],
@@ -14,17 +15,30 @@ class MasterActor(
 ) extends Actor
     with ActorLogging {
 
+  private val hbaseConn =
+    HBaseConnection.init(
+      zooKeeperAddress = zooKeeperAddress,
+      zooKeeperPort = zooKeeperPort
+    )
+
+  sys.addShutdownHook {
+    hbaseConn.close()
+    log.debug("Database was shut down")
+  }
+
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 3, loggingEnabled = true) { case _: Exception =>
       Stop
     }
 
-  private val dbActor = context.actorOf(
-    props = Props(
-      new DBActor(zooKeeperAddress = zooKeeperAddress, zooKeeperPort = zooKeeperPort)
-    ),
-    name = "db"
-  )
+  private val dbActorManager =
+    context.actorOf(
+      RoundRobinPool(10).props(
+        Props(new DBActor(hbaseConn))
+      ),
+      "DBActorManager"
+    )
+
   private val getterActor =
     context.actorOf(
       props = Props(
@@ -52,7 +66,7 @@ class MasterActor(
         new SchedulerActor(
           source = source.link,
           maxDepth = source.depth,
-          dbActor = dbActor,
+          dbActorManager = dbActorManager,
           getterActor = getterActor,
           linkCheckerActor = linkCheckerActor
         )

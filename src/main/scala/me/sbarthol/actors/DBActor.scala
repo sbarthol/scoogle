@@ -9,27 +9,12 @@ import java.security.MessageDigest
 import scala.math.{ceil, max}
 import scala.util.{Failure, Success, Try}
 
-class DBActor(
-    zooKeeperAddress: String,
-    zooKeeperPort: Int
-) extends Actor
-    with ActorLogging {
+class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
 
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
   private val maxTextLength = 2000
   private val maxItems = 99 * maxLinksPerPage
-
-  private val hbaseConn =
-    HBaseConnection.init(
-      zooKeeperAddress = zooKeeperAddress,
-      zooKeeperPort = zooKeeperPort
-    )
-
-  sys.addShutdownHook {
-    hbaseConn.close()
-    log.debug("Database was shut down")
-  }
 
   override def receive: Receive = {
 
