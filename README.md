@@ -10,6 +10,10 @@ crawler and server.
 
 ## Web Crawler based on *Akka Actors*
 
+### Architecture
+
+![architecture](https://drive.google.com/uc?id=1Sk7DkShAJsObgDnq5kqD9SJX9m1RFzKt)
+
 ### Seed
 
 The web crawler takes as input the seed in the shape of one or more XML files. Find below an example of such a file. The
