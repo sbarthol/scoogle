@@ -1,7 +1,7 @@
 package me.sbarthol.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import me.sbarthol.actors.SchedulerActor.{CheckedLink, Done, Error, NewLinks}
+import me.sbarthol.actors.SchedulerActor.{CheckedLinks, Done, Error, NewLinks}
 
 import java.net.URL
 import scala.collection.mutable
@@ -12,7 +12,7 @@ object SchedulerActor {
   case class Done(link: String, body: String)
   case class Error(link: String, error: Throwable)
   case class NewLinks(link: String, newLinks: List[String])
-  case class CheckedLink(link: String)
+  case class CheckedLinks(link: List[String])
 }
 
 class SchedulerActor(
@@ -36,7 +36,7 @@ class SchedulerActor(
     log.error(s"maxDepth $maxDepth is smaller than 0")
     context.stop(self)
   } else {
-    linkCheckerActor ! LinkCheckerActor.Check(source)
+    linkCheckerActor ! LinkCheckerActor.Check(List(source))
     distanceToSource.put(source, 0)
   }
 
@@ -54,33 +54,28 @@ class SchedulerActor(
       log.warning(s"Get request for link $link failed: ${error.toString}")
 
     case NewLinks(link, newLinks) =>
-      newLinks.foreach(newLink => {
+      val parentDistanceToSource = distanceToSource(link)
 
-        val parentDistanceToSource = distanceToSource(link)
+      val validNewLinks = newLinks.filter(newLink => {
+
         val childDistanceToSource =
           distanceToSource.getOrElse(key = newLink, default = maxDepth + 1)
 
-        if (
-          sameHost(source, newLink)
-          && parentDistanceToSource + 1 <= maxDepth
-          && parentDistanceToSource + 1 < childDistanceToSource
-        ) {
-
-          linkCheckerActor ! LinkCheckerActor.Check(newLink)
-          distanceToSource.put(
-            key = newLink,
-            value = parentDistanceToSource + 1
-          )
-
-        } else {
-          log.debug(s"Link $newLink does not meet one or more conditions")
-        }
+        sameHost(
+          source,
+          newLink
+        ) && parentDistanceToSource + 1 <= maxDepth && parentDistanceToSource + 1 < childDistanceToSource
       })
 
-    case CheckedLink(link) =>
-      log.debug(s"Downloading new Link($link)")
-      context.parent ! MasterActor.Put
-      getterActor ! GetterActor.Link(link)
+      validNewLinks.foreach(newLink =>
+        distanceToSource.put(key = newLink, value = parentDistanceToSource + 1)
+      )
+      linkCheckerActor ! LinkCheckerActor.Check(validNewLinks)
+
+    case CheckedLinks(links) =>
+      log.debug(s"Downloading new Links($links)")
+      context.parent ! MasterActor.Put(links.size)
+      getterActor ! GetterActor.Links(links)
   }
 
   private def sameHost(first: String, second: String): Boolean = {

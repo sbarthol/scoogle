@@ -9,19 +9,17 @@ class LinkCheckerActor extends Actor with ActorLogging {
 
   private val downloaded = new mutable.HashSet[String]()
 
-  override def receive: Receive = { case Check(link) =>
-    if (!downloaded.contains(link)) {
+  override def receive: Receive = { case Check(links) =>
 
-      log.debug(s"Link $link not downloaded yet")
-      downloaded.add(link)
-      sender ! SchedulerActor.CheckedLink(link)
-    } else {
-      log.debug(s"Link $link has already been downloaded")
-    }
+    val notContained = links.filterNot(downloaded.contains)
+    downloaded.addAll(notContained)
+    sender ! SchedulerActor.CheckedLinks(notContained)
+
+    log.debug(s"Links $notContained not downloaded yet")
   }
 }
 
 object LinkCheckerActor {
 
-  case class Check(link: String)
+  case class Check(links: List[String])
 }

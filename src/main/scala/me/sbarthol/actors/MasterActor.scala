@@ -75,8 +75,8 @@ class MasterActor(
         failed = failed
       )
 
-    case Put =>
-      downloading = downloading + 1
+    case Put(n) =>
+      downloading = downloading + n
 
     case Remove =>
       downloading = downloading - 1
@@ -91,7 +91,7 @@ class MasterActor(
 
 object MasterActor {
 
-  case object Put
+  case class Put(n: Int)
   case object Remove
   case object Error
   case object Increment

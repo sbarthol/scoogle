@@ -14,13 +14,16 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
 
   override def receive: Receive = {
 
-    case GetterActor.Link(link) =>
-      if (counter == maxConcurrentConnections) {
-        queue.enqueue((link, sender))
-      } else {
-        counter = counter + 1
-        request(link, sender)
-      }
+    case GetterActor.Links(links) =>
+      links.foreach(link => {
+
+        if (counter == maxConcurrentConnections) {
+          queue.enqueue((link, sender))
+        } else {
+          counter = counter + 1
+          request(link, sender)
+        }
+      })
 
     case GetterActor.Done(link, body, scheduler) =>
       if (queue.nonEmpty) {
@@ -94,5 +97,5 @@ object GetterActor {
 
   case class Done(link: String, body: String, scheduler: ActorRef)
   case class Error(link: String, error: Throwable, scheduler: ActorRef)
-  case class Link(link: String)
+  case class Links(links: List[String])
 }
