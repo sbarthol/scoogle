@@ -1,5 +1,6 @@
 package me.sbarthol.utils
 
+import me.sbarthol.actors.DBActor.Score
 import me.sbarthol.utils.HBaseConnection.log
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, TableName}
@@ -114,23 +115,33 @@ class HBaseConnection private (
     }.asJava)
   }
 
+  private def mergeScores(a: Score, b: Score): Score = {
+
+    Score(minFreq = math.min(a.minFreq, b.minFreq), sumFreq = a.sumFreq + b.sumFreq)
+  }
+
   private def intersection(
-      matchedLinks: mutable.Map[String, Int],
+      matchedLinks: mutable.Map[String, Score],
       newWord: String
   ): Unit = {
 
     val newMatchedLinks = getScan(newWord)
     matchedLinks.keys.foreach(hash => {
       if (newMatchedLinks.contains(hash)) {
+
         matchedLinks
-          .put(key = hash, value = math.min(matchedLinks(hash), newMatchedLinks(hash)))
+          .put(key = hash, value = mergeScores(matchedLinks(hash), newMatchedLinks(hash)))
+
       } else {
         matchedLinks.remove(key = hash)
       }
     })
   }
 
-  private def reduction(matchedLinks: mutable.Map[String, Int], newWord: String): Unit = {
+  private def reduction(
+      matchedLinks: mutable.Map[String, Score],
+      newWord: String
+  ): Unit = {
 
     val hashes = matchedLinks.keys.toList
 
@@ -154,17 +165,19 @@ class HBaseConnection private (
           .valueOf(new String(CellUtil.cloneValue(result.rawCells().head)), 16)
           .toInt
 
-        matchedLinks.put(key = hash, value = math.min(matchedLinks(hash), count))
+        matchedLinks
+          .put(key = hash, value = mergeScores(matchedLinks(hash), Score(count, count)))
       }
     }
   }
 
-  private def getScan(word: String): mutable.Map[String, Int] = {
+  private def getScan(word: String): mutable.Map[String, Score] = {
 
-    val matchedLinks = mutable.Map[String, Int]()
+    val matchedLinks = mutable.Map[String, Score]()
 
     val scan = new Scan()
     scan.setRowPrefixFilter((word + "_").getBytes)
+
     val rows = invertedIndexTable.getScanner(scan).iterator.asScala.toList
 
     rows.foreach(row => {
@@ -172,13 +185,13 @@ class HBaseConnection private (
       val List(_, hash) = new String(row.getRow).split("_").toList
       val count =
         Integer.valueOf(new String(CellUtil.cloneValue(row.rawCells().head)), 16).toInt
-      matchedLinks.put(key = hash, value = count)
+      matchedLinks.put(key = hash, value = Score(minFreq = count, sumFreq = count))
     })
 
     matchedLinks
   }
 
-  def getHashes(words: List[String]): List[(String, Int)] = {
+  def getHashes(words: List[String]): List[(String, Score)] = {
 
     // Todo: even better create a DB with word -> number of websites containing that word
     val descendingOrder = words.sortBy(-_.length)
@@ -197,6 +210,6 @@ class HBaseConnection private (
       else reduction(matchedLinks, word)
     })
 
-    matchedLinks.toList.sortBy { case (_, count) => -count }
+    matchedLinks.toList
   }
 }

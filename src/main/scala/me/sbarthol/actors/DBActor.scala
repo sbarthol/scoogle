@@ -1,7 +1,7 @@
 package me.sbarthol.actors
 
 import akka.actor.{Actor, ActorLogging}
-import me.sbarthol.actors.DBActor.{GetLinks, Item, Put, Response}
+import me.sbarthol.actors.DBActor._
 import me.sbarthol.utils.HBaseConnection
 
 import java.net.URL
@@ -37,7 +37,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
         case _              => hbaseConn.getHashes(words)
       }
 
-      val trimmedHashes = hashes.take(maxItems)
+      val trimmedHashes = hashes.sortBy { case (_, s) => - computeScore(s) }.take(maxItems)
 
       log.debug(s"Found a total of ${trimmedHashes.size} links")
       val nPages = max(1, ceil(trimmedHashes.size / maxLinksPerPage.toDouble).toInt)
@@ -65,6 +65,10 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
         nResults = hashes.size,
         processingTimeMillis = endMoment - startMoment
       )
+  }
+
+  private def computeScore(s: Score): Int = {
+    s.minFreq + s.sumFreq
   }
 
   private def selectTextSegments(text: String, keywords: List[String]): String = {
@@ -143,4 +147,6 @@ object DBActor {
       title: String,
       text: String
   )
+
+  case class Score(minFreq: Int, sumFreq: Int)
 }
