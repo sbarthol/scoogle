@@ -61,7 +61,7 @@ endpoint on ` http://localhost:9095`. A Prometheus server can be started in orde
 
 ### Benchmark
 
-The web crawler is able to crawl and store approximately 35 pages per second on a `e2-standard-4` GCE instance.
+The web crawler is able to crawl and store approximately 35 pages per second on a `e2-standard-4` GCE instance (4 vCPUs, 16 GB memory).
 
 ## Frontend written in *React*
 
