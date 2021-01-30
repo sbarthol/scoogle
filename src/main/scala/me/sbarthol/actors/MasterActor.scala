@@ -2,11 +2,9 @@ package me.sbarthol.actors
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
-import me.sbarthol.actors.MasterActor.{Increment, Inside, Put, Remove, Status, Error}
+import me.sbarthol.actors.MasterActor.{Error, Increment, Put, Remove, Status}
 import me.sbarthol.source.Source
 import me.sbarthol.utils.NettyClient
-
-import scala.collection.mutable
 
 class MasterActor(
     sources: List[Source],
@@ -21,7 +19,6 @@ class MasterActor(
       Stop
     }
 
-  private val downloading = new mutable.HashSet[String]
   private val dbActor = context.actorOf(
     props = Props(
       new DBActor(zooKeeperAddress = zooKeeperAddress, zooKeeperPort = zooKeeperPort)
@@ -63,6 +60,7 @@ class MasterActor(
     )
   })
 
+  private var downloading = 0
   private var completed = 0
   private var failed = 0
 
@@ -72,19 +70,16 @@ class MasterActor(
 
     case Status =>
       sender ! MonitorActor.Status(
-        downloading = downloading.size,
+        downloading = downloading,
         completed = completed,
         failed = failed
       )
 
-    case Inside(link) =>
-      sender ! downloading.contains(link)
+    case Put =>
+      downloading = downloading + 1
 
-    case Put(link) =>
-      downloading.add(link)
-
-    case Remove(link) =>
-      downloading.remove(link)
+    case Remove =>
+      downloading = downloading - 1
 
     case Increment =>
       completed = completed + 1
@@ -96,9 +91,8 @@ class MasterActor(
 
 object MasterActor {
 
-  case class Inside(link: String)
-  case class Put(link: String)
-  case class Remove(link: String)
+  case object Put
+  case object Remove
   case object Error
   case object Increment
   case object Status

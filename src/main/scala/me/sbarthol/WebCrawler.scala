@@ -13,6 +13,7 @@ object WebCrawler {
     Kamon.init()
 
     val conf = new WebCrawlerConf(args)
+    
     val sources = SourcesLoader.loadFromFiles(filepaths = conf.sourceFilepaths())
     val system = ActorSystem("WebCrawler")
 

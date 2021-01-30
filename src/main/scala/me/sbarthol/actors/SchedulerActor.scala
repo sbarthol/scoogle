@@ -44,12 +44,12 @@ class SchedulerActor(
 
     case Done(link, body) =>
       log.debug(s"Received Done($link)")
-      context.parent ! MasterActor.Remove(link)
+      context.parent ! MasterActor.Remove
       context.parent ! MasterActor.Increment
       parserActor ! ParserActor.Body(link, body)
 
     case Error(link, error) =>
-      context.parent ! MasterActor.Remove(link)
+      context.parent ! MasterActor.Remove
       context.parent ! MasterActor.Error
       log.warning(s"Get request for link $link failed: ${error.toString}")
 
@@ -79,7 +79,7 @@ class SchedulerActor(
 
     case CheckedLink(link) =>
       log.debug(s"Downloading new Link($link)")
-      context.parent ! MasterActor.Put(link)
+      context.parent ! MasterActor.Put
       getterActor ! GetterActor.Link(link)
   }
 
