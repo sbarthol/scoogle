@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import me.sbarthol.actors.ParserActor.{Body, extractWords}
 import org.jsoup.Jsoup
 
+import java.net.URL
 import scala.jdk.CollectionConverters._
 
 class ParserActor(dbActorManager: ActorRef, schedulerActor: ActorRef)
@@ -17,7 +18,7 @@ class ParserActor(dbActorManager: ActorRef, schedulerActor: ActorRef)
 
     val text = getText(html)
     val title = getTitle(html)
-    val words = getWords(title = title, text = text)
+    val words = getWords(title = title, text = text, host = getHost(link))
 
     log.debug(s"Link $link contains title $title text $text")
 
@@ -63,13 +64,20 @@ class ParserActor(dbActorManager: ActorRef, schedulerActor: ActorRef)
 
   private def getWords(
       title: String,
+      host: String,
       text: String
   ): List[(String, Int)] = {
 
     val titleWords = extractWords(title)
       .groupBy(identity)
       .view
-      .mapValues(_.size * 4)
+      .mapValues(_.size * 1000)
+      .toList
+
+    val hostWords = extractWords(host)
+      .groupBy(identity)
+      .view
+      .mapValues(_.size * 1000)
       .toList
 
     // Todo: reduce to basic form: shoes -> shoe, ate -> eat
@@ -79,11 +87,15 @@ class ParserActor(dbActorManager: ActorRef, schedulerActor: ActorRef)
       .mapValues(_.size)
       .toList
 
-    (titleWords ++ textWords).groupMapReduce { case (word, _) =>
+    (titleWords ++ textWords ++ hostWords).groupMapReduce { case (word, _) =>
       word
     } { case (_, count) =>
       count
     }(_ + _).toList
+  }
+
+  private def getHost(link: String): String = {
+    new URL(link).getHost
   }
 
   private def getLinks(html: String, link: String): List[String] = {
