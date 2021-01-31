@@ -57,17 +57,17 @@ class MasterActor(
           maxConcurrentConnections = maxConcurrentSockets
         )
       ),
-      name = "getter"
+      name = "Getter"
     )
 
   private val linkCheckerActor =
-    context.actorOf(props = Props(new LinkCheckerActor), name = "linkChecker")
+    context.actorOf(props = Props(new LinkCheckerActor), name = "LinkChecker")
 
   context.actorOf(
     props = Props(
       new MonitorActor
     ),
-    name = "monitor"
+    name = "Monitor"
   )
 
   sources.foreach(source => {
