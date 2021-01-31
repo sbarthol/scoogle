@@ -28,6 +28,7 @@
   text-decoration: none;
   cursor: pointer;
   text-align: center;
+  color: #5e0505;
 }
 
 .OBtnSelected {
@@ -40,6 +41,7 @@
   font-size: 14px;
   text-decoration: none;
   text-align: center;
+  color: #5e0505;
 }
 
 .OBtn:hover {
@@ -62,6 +64,7 @@
 
 .NextBtn,
 .PreviousBtn {
+  color: #5e0505;
   border: 0;
   margin: 0 0 auto 0;
   width: 65px;
