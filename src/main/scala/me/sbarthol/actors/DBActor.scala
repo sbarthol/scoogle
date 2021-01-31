@@ -1,6 +1,7 @@
 package me.sbarthol.actors
 
 import akka.actor.{Actor, ActorLogging}
+import com.github.halfmatthalfcat.stringmetric.similarity.RatcliffObershelpMetric
 import me.sbarthol.actors.DBActor._
 import me.sbarthol.utils.HBaseConnection
 
@@ -37,7 +38,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
         case _              => hbaseConn.getHashes(words)
       }
 
-      val trimmedHashes = hashes.sortBy { case (_, s) => - computeScore(s) }.take(maxItems)
+      val trimmedHashes = hashes.sortBy { case (_, s) => -computeScore(s) }.take(maxItems)
 
       log.debug(s"Found a total of ${trimmedHashes.size} links")
       val nPages = max(1, ceil(trimmedHashes.size / maxLinksPerPage.toDouble).toInt)
@@ -60,11 +61,26 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
 
       val endMoment = System.currentTimeMillis
       sender ! Response(
-        links = slice,
+        links = removeSimilar(slice),
         nPages = nPages,
         nResults = hashes.size,
         processingTimeMillis = endMoment - startMoment
       )
+  }
+
+  private def removeSimilar(webpages: List[Item]): List[Item] = {
+
+    if (webpages.isEmpty) webpages
+    else {
+      webpages.foldLeft(z = List(webpages.head))((l, w) => {
+
+        RatcliffObershelpMetric.compare(l.head.text, w.text) match {
+          case Some(v) if v > 0.9 =>
+            (if (l.head.text.length > w.text.length) l.head else w) :: l.tail
+          case _ => w :: l
+        }
+      })
+    }
   }
 
   private def computeScore(s: Score): Int = {

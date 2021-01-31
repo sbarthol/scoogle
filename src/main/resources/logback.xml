@@ -19,7 +19,7 @@
     <logger name="akka" level="WARN"/>
     <logger name="akka.actor.DeadLetterActorRef" level="INFO"/>
     <logger name="me.sbarthol.utils.HttpServer" level="DEBUG"/>
-    <logger name="me.sbarthol.actors.SchedulerActor" level="ERROR"/>
+    <logger name="me.sbarthol.actors.SchedulerActor" level="WARN"/>
     <logger name="me.sbarthol.utils.HBaseConnection" level="INFO"/>
     <logger name="me.sbarthol.actors.DBActor" level="INFO"/>
     <logger name="com.ning" level="WARN"/>
