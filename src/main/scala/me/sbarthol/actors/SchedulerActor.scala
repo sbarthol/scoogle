@@ -1,7 +1,6 @@
 package me.sbarthol.actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.routing.RoundRobinPool
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import me.sbarthol.actors.SchedulerActor.{CheckedLinks, Done, Error, NewLinks}
 
 import java.net.URL
@@ -19,23 +18,13 @@ object SchedulerActor {
 class SchedulerActor(
     source: String,
     maxDepth: Int,
-    dbActorManager: ActorRef,
+    parserActorManager: ActorRef,
     getterActor: ActorRef,
     linkCheckerActor: ActorRef
 ) extends Actor
     with ActorLogging {
 
   private val distanceToSource = new mutable.HashMap[String, Int]
-
-  private val parserActorManager =
-    context.actorOf(
-      RoundRobinPool(10).props(
-        Props(
-          new ParserActor(dbActorManager = dbActorManager, schedulerActor = context.self)
-        )
-      ),
-      "ParserActorManager"
-    )
 
   if (maxDepth < 0) {
     log.error(s"maxDepth $maxDepth is smaller than 0")
@@ -51,7 +40,7 @@ class SchedulerActor(
       log.debug(s"Received Done($link)")
       context.parent ! MasterActor.Remove
       context.parent ! MasterActor.Increment
-      parserActorManager ! ParserActor.Body(link, body)
+      parserActorManager ! ParserActor.Body(link, body, context.self)
 
     case Error(link, error) =>
       context.parent ! MasterActor.Remove

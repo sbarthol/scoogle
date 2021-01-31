@@ -7,13 +7,13 @@ import org.jsoup.Jsoup
 import java.net.URL
 import scala.jdk.CollectionConverters._
 
-class ParserActor(dbActorManager: ActorRef, schedulerActor: ActorRef)
+class ParserActor(dbActorManager: ActorRef)
     extends Actor
     with ActorLogging {
 
   private val minimumElementTextLength = 10
 
-  override def receive: Receive = { case Body(link, html) =>
+  override def receive: Receive = { case Body(link, html, schedulerActor) =>
     schedulerActor ! SchedulerActor.NewLinks(link, getLinks(html, link))
 
     val text = getText(html)
@@ -125,5 +125,5 @@ object ParserActor {
       .map(_.toLowerCase)
   }
 
-  case class Body(link: String, html: String)
+  case class Body(link: String, html: String, schedulerActor: ActorRef)
 }

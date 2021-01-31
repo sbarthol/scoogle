@@ -39,6 +39,16 @@ class MasterActor(
       "DBActorManager"
     )
 
+  private val parserActorManager =
+    context.actorOf(
+      RoundRobinPool(10).props(
+        Props(
+          new ParserActor(dbActorManager = dbActorManager)
+        )
+      ),
+      "ParserActorManager"
+    )
+
   private val getterActor =
     context.actorOf(
       props = Props(
@@ -66,9 +76,9 @@ class MasterActor(
         new SchedulerActor(
           source = source.link,
           maxDepth = source.depth,
-          dbActorManager = dbActorManager,
           getterActor = getterActor,
-          linkCheckerActor = linkCheckerActor
+          linkCheckerActor = linkCheckerActor,
+          parserActorManager = parserActorManager
         )
       )
     )
