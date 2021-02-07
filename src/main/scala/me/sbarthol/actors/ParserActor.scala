@@ -1,15 +1,24 @@
 package me.sbarthol.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import me.sbarthol.actors.ParserActor.{Body, extractWords}
+import me.sbarthol.actors.ParserActor.{Body, toKeywords}
+import org.apache.lucene.analysis.Analyzer
+import org.apache.lucene.analysis.core.{LetterTokenizerFactory, LowerCaseFilterFactory, StopFilterFactory}
+import org.apache.lucene.analysis.custom.CustomAnalyzer
+import org.apache.lucene.analysis.en.PorterStemFilterFactory
+import org.apache.lucene.analysis.miscellaneous.LengthFilterFactory
+import org.apache.lucene.analysis.standard.{StandardAnalyzer, StandardTokenizerFactory}
+import org.apache.lucene.analysis.synonym.SynonymGraphFilterFactory
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.jsoup.Jsoup
 
 import java.net.URL
+import scala.collection.immutable.HashSet
+import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
+import scala.util.control.Breaks.{break, breakable}
 
-class ParserActor(dbActorManager: ActorRef)
-    extends Actor
-    with ActorLogging {
+class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
 
   private val minimumElementTextLength = 10
 
@@ -68,20 +77,19 @@ class ParserActor(dbActorManager: ActorRef)
       text: String
   ): List[(String, Int)] = {
 
-    val titleWords = extractWords(title)
+    val titleWords = toKeywords(title)
       .groupBy(identity)
       .view
       .mapValues(_.size * 1000)
       .toList
 
-    val hostWords = extractWords(host)
+    val hostWords = toKeywords(host)
       .groupBy(identity)
       .view
       .mapValues(_.size * 1000)
       .toList
 
-    // Todo: reduce to basic form: shoes -> shoe, ate -> eat
-    val textWords = extractWords(text)
+    val textWords = toKeywords(text)
       .groupBy(identity)
       .view
       .mapValues(_.size)
@@ -112,17 +120,107 @@ class ParserActor(dbActorManager: ActorRef)
 }
 
 object ParserActor {
-  def extractWords(text: String): List[String] = {
 
-    val minimumWordLength = 3
+  private lazy val keywordAnalyser =
+    CustomAnalyzer
+      .builder()
+      .withTokenizer(LetterTokenizerFactory.NAME)
+      .addTokenFilter(LengthFilterFactory.NAME, "min", "3", "max", "20")
+      .addTokenFilter(LowerCaseFilterFactory.NAME)
+      .addTokenFilter(StopFilterFactory.NAME)
+      .addTokenFilter(PorterStemFilterFactory.NAME)
+      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
+      .build()
 
-    text
-      .split(
-        "[[ ]*|[,]*|[;]*|[:]*|[']*|[’]*|[\\\\]*|[\"]*|[.]*|[…]*|[:]*|[/]*|[!]*|[?]*|[+]*]+"
-      )
-      .toList
-      .filter(word => word.length >= minimumWordLength && word.forall(_.isLetter))
-      .map(_.toLowerCase)
+  private lazy val synonymAnalyser =
+    CustomAnalyzer
+      .builder()
+      .withTokenizer(StandardTokenizerFactory.NAME)
+      .addTokenFilter(LowerCaseFilterFactory.NAME)
+      .addTokenFilter(PorterStemFilterFactory.NAME)
+      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
+      .build()
+
+  private def tokenize(text: String, analyzer: Analyzer): List[String] = {
+
+    val tokenStream = analyzer.tokenStream("", text)
+    tokenStream.reset()
+
+    val wordList = ListBuffer[String]()
+    while (tokenStream.incrementToken()) {
+      val token = tokenStream.getAttribute(classOf[CharTermAttribute]).toString
+      wordList.addOne(token)
+    }
+    tokenStream.close()
+    wordList.toList
+  }
+
+  def toKeywords(text: String): List[String] = {
+    tokenize(text, keywordAnalyser).flatMap(_.split(" ")).filter(_.length > 1)
+  }
+
+  private def toWords(text: String): List[String] = {
+    tokenize(text, new StandardAnalyzer)
+  }
+
+  private def toSynonyms(text: String): List[String] = {
+    tokenize(text, synonymAnalyser).flatMap(_.split(" "))
+  }
+
+  def highlight(text: String, keywords: List[String]): String = {
+
+    val numberWrappingWords = 3
+    val maxTextLength = 2000
+    val sb = new StringBuilder()
+    val keywordSet = HashSet[String]() ++ keywords
+
+    def addToSb(w: String, bold: Boolean): Unit = {
+      if (bold) sb.addAll("<strong>")
+      sb.addAll(w)
+      if (bold) sb.addAll("</strong>")
+    }
+
+    val words = toWords(text).toArray
+    val synonyms = toSynonyms(text).toArray
+    assert(words.length == synonyms.length)
+
+    var i = 0
+    breakable {while (i < words.length) {
+
+      if (sb.size >= maxTextLength) break
+      if (
+        i + 1 < words.length && synonyms(i).length == 1 && keywordSet.contains(
+          synonyms(i + 1)
+        )
+      ) {
+
+        val start = math.max(0, i - numberWrappingWords)
+        val end = math.min(i + numberWrappingWords, words.length - 1)
+
+        for (j <- start until end) {
+          addToSb(words(j), i == j || i + 1 == j)
+          sb.addOne(' ')
+        }
+        addToSb(words(end), i + 1 == end)
+        sb.addAll("... ")
+        i = i + 2
+      } else if (keywordSet.contains(synonyms(i))) {
+
+        val start = math.max(0, i - numberWrappingWords)
+        val end = math.min(i + numberWrappingWords, words.length - 1)
+
+        for (j <- start until end) {
+          addToSb(words(j), i == j)
+          sb.addOne(' ')
+        }
+        addToSb(words(end), i == end)
+        sb.addAll("... ")
+        i = i + 1
+      } else {
+        i = i + 1
+      }
+    }}
+    sb.toString
   }
 
   case class Body(link: String, html: String, schedulerActor: ActorRef)

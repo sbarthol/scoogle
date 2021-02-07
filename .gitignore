@@ -10,3 +10,4 @@ build
 dependency-reduced-pom.xml
 nginx.conf
 sources
+synonyms2.txt

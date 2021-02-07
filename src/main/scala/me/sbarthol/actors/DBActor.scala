@@ -3,6 +3,7 @@ package me.sbarthol.actors
 import akka.actor.{Actor, ActorLogging}
 import info.debatty.java.stringsimilarity.RatcliffObershelp
 import me.sbarthol.actors.DBActor._
+import me.sbarthol.actors.ParserActor.{highlight, toKeywords}
 import me.sbarthol.utils.HBaseConnection
 
 import java.net.URL
@@ -14,7 +15,6 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
 
   private val maxLinksPerPage = 10
   private val maxTitleLength = 80
-  private val maxTextLength = 2000
   private val maxItems = 99 * maxLinksPerPage
 
   override def receive: Receive = {
@@ -30,12 +30,14 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
       hbaseConn.putWords(hash = hash, words = words)
       log.debug(s"Link $link put in database")
 
-    case GetLinks(words: List[String], pageNumber) =>
+    case GetLinks(query: String, pageNumber) =>
       val startMoment = System.currentTimeMillis
 
-      val hashes = words match {
+      val keywords = toKeywords(query).distinct
+
+      val hashes = keywords match {
         case w if w.isEmpty => List.empty
-        case _              => hbaseConn.getHashes(words)
+        case _              => hbaseConn.getHashes(keywords)
       }
 
       val trimmedHashes = hashes.sortBy { case (_, s) => -computeScore(s) }.take(maxItems)
@@ -54,7 +56,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
           Item(
             link = link.replace("file://", ""),
             title = cleanText(title.take(maxTitleLength)),
-            text = cleanText(selectTextSegments(text, words)),
+            text = cleanText(highlight(text, keywords)),
             cleanLink = cleanLink(link).replace("file:", "")
           )
         }
@@ -96,37 +98,6 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
     s.minFreq + s.sumFreq
   }
 
-  private def selectTextSegments(text: String, keywords: List[String]): String = {
-
-    val numberWrappingWords = 3
-    val sb = new StringBuilder()
-    val words = text.trim.split(" ")
-
-    def addToSb(w: String, bold: Boolean): Unit = {
-      if (bold) sb.addAll("<strong>")
-      sb.addAll(w)
-      if (bold) sb.addAll("</strong>")
-    }
-
-    for {
-      i <- 0 until words.length
-      if sb.size < maxTextLength
-      if keywords.exists(words(i).toLowerCase.startsWith)
-    } {
-
-      val start = math.max(0, i - numberWrappingWords)
-      val end = math.min(i + numberWrappingWords, words.length - 1)
-
-      for (j <- start until end) {
-        addToSb(words(j), i == j)
-        sb.addOne(' ')
-      }
-      addToSb(words(end), i == end)
-      sb.addAll("... ")
-    }
-    sb.toString
-  }
-
   private def cleanLink(link: String): String = {
 
     Try {
@@ -165,7 +136,7 @@ object DBActor {
       nResults: Int,
       processingTimeMillis: Long
   )
-  case class GetLinks(words: List[String], pageNumber: Int)
+  case class GetLinks(query: String, pageNumber: Int)
   case class Item(
       cleanLink: String,
       link: String,

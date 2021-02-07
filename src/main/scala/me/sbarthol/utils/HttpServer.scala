@@ -1,7 +1,5 @@
 package me.sbarthol.utils
 
-import me.sbarthol.actors.DBActor
-import me.sbarthol.actors.ParserActor.extractWords
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.javadsl.server.PathMatchers.remaining
 import akka.http.scaladsl.Http
@@ -10,9 +8,11 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
+import me.sbarthol.actors.DBActor
+import me.sbarthol.actors.ParserActor.toKeywords
+import me.sbarthol.utils.JsonProtocol.responseFormat
 import org.slf4j.LoggerFactory
 import spray.json.enrichAny
-import me.sbarthol.utils.JsonProtocol.responseFormat
 
 import java.net.URLDecoder
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
@@ -93,21 +93,19 @@ object HttpServer {
 
           (query, pageNumber) => {
 
-            val keywords = extractWords(query).distinct
-
-            val future = (dbActor ? DBActor.GetLinks(keywords, pageNumber))
+            val future = (dbActor ? DBActor.GetLinks(query, pageNumber))
               .mapTo[DBActor.Response]
               .map(_.toJson.compactPrint)
 
             onComplete(future) {
               case Success(value) =>
                 log.debug(
-                  s"Request succeeded: keywords = $keywords"
+                  s"Request succeeded: query = $query"
                 )
                 complete(HttpEntity(ContentTypes.`application/json`, value))
               case Failure(error) =>
                 log.warn(
-                  s"Request failed: keywords = $keywords, error = ${error.getMessage}"
+                  s"Request failed: query = $query, error = ${error.getMessage}"
                 )
                 complete(StatusCodes.InternalServerError, error.getMessage)
             }
