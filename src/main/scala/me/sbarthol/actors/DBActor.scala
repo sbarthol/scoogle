@@ -105,7 +105,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
       val noQuery = new URL(
         url.getProtocol,
         url.getHost,
-        url.getFile
+        url.getPath
       ).toString
 
       noQuery
