@@ -5,7 +5,8 @@ function Error({ status, description }) {
   return (
     <div className="ErrorBox">
       <p>
-        <em>{status}.</em> {description}.
+        {status === -1 ? "" : <em>{status}.</em>}
+        {description}.
       </p>
     </div>
   );

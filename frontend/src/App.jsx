@@ -57,7 +57,15 @@ class App extends React.Component {
           window.location.replace(searchResults.links[0].link);
         }
       })
-      .catch(console.log);
+      .catch((e) => {
+        this.setState({
+          showHomePage: false,
+          loading: false,
+          error: true,
+          errorDescription: e.errorDescription,
+          errorStatus: -1,
+        });
+      });
   }
 
   getSearchResults(query, pageNumber) {
@@ -72,31 +80,49 @@ class App extends React.Component {
       query
     )}&pageNumber=${pageNumber}`;
 
-    fetch(apiUrl).then((res) => {
-      if (res.status === 200) {
-        res
-          .json()
-          .then((searchResults) => {
-            this.setState({
-              links: searchResults.links,
-              nPages: searchResults.nPages,
-              showHomePage: false,
-              loading: false,
-              nResults: searchResults.nResults,
-              processingTimeMillis: searchResults.processingTimeMillis,
+    fetch(apiUrl)
+      .then((res) => {
+        if (res.status === 200) {
+          res
+            .json()
+            .then((searchResults) => {
+              this.setState({
+                links: searchResults.links,
+                nPages: searchResults.nPages,
+                showHomePage: false,
+                loading: false,
+                nResults: searchResults.nResults,
+                processingTimeMillis: searchResults.processingTimeMillis,
+              });
+            })
+            .catch((e) => {
+              this.setState({
+                showHomePage: false,
+                loading: false,
+                error: true,
+                errorDescription: e.errorDescription,
+                errorStatus: -1,
+              });
             });
-          })
-          .catch(console.log);
-      } else {
+        } else {
+          this.setState({
+            showHomePage: false,
+            loading: false,
+            error: true,
+            errorDescription: res.statusText,
+            errorStatus: res.status,
+          });
+        }
+      })
+      .catch((e) => {
         this.setState({
           showHomePage: false,
           loading: false,
           error: true,
-          errorDescription: res.statusText,
-          errorStatus: res.status,
+          errorDescription: e.errorDescription,
+          errorStatus: -1,
         });
-      }
-    });
+      });
   }
 
   render() {
