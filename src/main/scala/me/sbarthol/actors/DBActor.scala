@@ -1,7 +1,6 @@
 package me.sbarthol.actors
 
 import akka.actor.{Actor, ActorLogging}
-import info.debatty.java.stringsimilarity.RatcliffObershelp
 import me.sbarthol.actors.DBActor._
 import me.sbarthol.actors.ParserActor.{highlight, toKeywords}
 import me.sbarthol.utils.HBaseConnection
@@ -61,37 +60,13 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
           )
         }
 
-      val similarRemoved = removeSimilar(slice)
-
       val endMoment = System.currentTimeMillis
       sender ! Response(
-        links = similarRemoved,
+        links = slice,
         nPages = nPages,
         nResults = hashes.size,
         processingTimeMillis = endMoment - startMoment
       )
-  }
-
-  private def removeSimilar(webpages: List[Item]): List[Item] = {
-
-    if (webpages.isEmpty) webpages
-    else {
-
-      val ro = new RatcliffObershelp
-      webpages.tail
-        .foldLeft(z = List[Item](webpages.head))(op = (l, w) => {
-
-          if (l.head.text.length * w.text.length > 500000) w :: l
-          else {
-            ro.similarity(l.head.text, w.text) match {
-              case v if v > 0.65 =>
-                (if (l.head.text.length > w.text.length) l.head else w) :: l.tail
-              case _ => w :: l
-            }
-          }
-        })
-        .reverse
-    }
   }
 
   private def computeScore(s: Score): Int = {
