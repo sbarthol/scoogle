@@ -21,6 +21,7 @@ import scala.util.control.Breaks.{break, breakable}
 class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
 
   private val minimumElementTextLength = 10
+  private val maximumTextLength = 500000
 
   override def receive: Receive = { case Body(link, html, schedulerActor) =>
     schedulerActor ! SchedulerActor.NewLinks(link, getLinks(html, link))
@@ -65,6 +66,7 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
         .map(_.text)
         .filter(_.length >= minimumElementTextLength)
         .mkString(" ")
+        .take(maximumTextLength)
 
     } catch {
       case _: Exception => ""
