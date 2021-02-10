@@ -16,6 +16,8 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
   private val maxTitleLength = 80
   private val maxItems = 99 * maxLinksPerPage
 
+  private var cache: Option[CacheItem] = None
+
   override def receive: Receive = {
 
     case Put(words, link, text, title) =>
@@ -32,14 +34,27 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
     case GetLinks(query: String, pageNumber) =>
       val startMoment = System.currentTimeMillis
 
-      val keywords = toKeywords(query).distinct
+      val CacheItem(trimmedHashes, totalResults, keywords, _) = cache match {
 
-      val hashes = keywords match {
-        case w if w.isEmpty => List.empty
-        case _              => hbaseConn.getHashes(keywords)
+        case Some(value) if value.query == query => value
+        case _ =>
+          val keywords = toKeywords(query).distinct
+          val hashes = keywords match {
+            case w if w.isEmpty => List.empty
+            case _              => hbaseConn.getHashes(keywords)
+          }
+
+          val trimmedHashes =
+            hashes.sortBy { case (_, s) => -computeScore(s) }.take(maxItems)
+          val cacheItem = CacheItem(
+            trimmedHashes = trimmedHashes,
+            totalResults = hashes.size,
+            keywords = keywords,
+            query = query
+          )
+          cache = Some(cacheItem)
+          cacheItem
       }
-
-      val trimmedHashes = hashes.sortBy { case (_, s) => -computeScore(s) }.take(maxItems)
 
       log.debug(s"Found a total of ${trimmedHashes.size} links")
       val nPages = max(1, ceil(trimmedHashes.size / maxLinksPerPage.toDouble).toInt)
@@ -64,7 +79,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
       sender ! Response(
         links = slice,
         nPages = nPages,
-        nResults = hashes.size,
+        nResults = totalResults,
         processingTimeMillis = endMoment - startMoment
       )
   }
@@ -120,4 +135,10 @@ object DBActor {
   )
 
   case class Score(minFreq: Int, sumFreq: Int)
+  case class CacheItem(
+      trimmedHashes: List[(String, Score)],
+      totalResults: Int,
+      keywords: List[String],
+      query: String
+  )
 }
