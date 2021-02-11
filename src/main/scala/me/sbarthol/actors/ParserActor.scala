@@ -3,7 +3,11 @@ package me.sbarthol.actors
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import me.sbarthol.actors.ParserActor.{Body, toKeywords}
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.analysis.core.{LetterTokenizerFactory, LowerCaseFilterFactory, StopFilterFactory}
+import org.apache.lucene.analysis.core.{
+  LetterTokenizerFactory,
+  LowerCaseFilterFactory,
+  StopFilterFactory
+}
 import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.analysis.en.PorterStemFilterFactory
 import org.apache.lucene.analysis.miscellaneous.LengthFilterFactory
@@ -187,41 +191,43 @@ object ParserActor {
     assert(words.length == synonyms.length)
 
     var i = 0
-    breakable {while (i < words.length) {
+    breakable {
+      while (i < words.length) {
 
-      if (sb.size >= maxTextLength) break
-      if (
-        i + 1 < words.length && synonyms(i).length == 1 && keywordSet.contains(
-          synonyms(i + 1)
-        )
-      ) {
+        if (sb.size >= maxTextLength) break
+        if (
+          i + 1 < words.length && synonyms(i).length == 1 && keywordSet.contains(
+            synonyms(i + 1)
+          )
+        ) {
 
-        val start = math.max(0, i - numberWrappingWords)
-        val end = math.min(i + numberWrappingWords, words.length - 1)
+          val start = math.max(0, i - numberWrappingWords)
+          val end = math.min(i + numberWrappingWords, words.length - 1)
 
-        for (j <- start until end) {
-          addToSb(words(j), i == j || i + 1 == j)
-          sb.addOne(' ')
+          for (j <- start until end) {
+            addToSb(words(j), i == j || i + 1 == j)
+            sb.addOne(' ')
+          }
+          addToSb(words(end), i + 1 == end)
+          sb.addAll("... ")
+          i = i + 2
+        } else if (keywordSet.contains(synonyms(i))) {
+
+          val start = math.max(0, i - numberWrappingWords)
+          val end = math.min(i + numberWrappingWords, words.length - 1)
+
+          for (j <- start until end) {
+            addToSb(words(j), i == j)
+            sb.addOne(' ')
+          }
+          addToSb(words(end), i == end)
+          sb.addAll("... ")
+          i = i + 1
+        } else {
+          i = i + 1
         }
-        addToSb(words(end), i + 1 == end)
-        sb.addAll("... ")
-        i = i + 2
-      } else if (keywordSet.contains(synonyms(i))) {
-
-        val start = math.max(0, i - numberWrappingWords)
-        val end = math.min(i + numberWrappingWords, words.length - 1)
-
-        for (j <- start until end) {
-          addToSb(words(j), i == j)
-          sb.addOne(' ')
-        }
-        addToSb(words(end), i == end)
-        sb.addAll("... ")
-        i = i + 1
-      } else {
-        i = i + 1
       }
-    }}
+    }
     sb.toString
   }
 
