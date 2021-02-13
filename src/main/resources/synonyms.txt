@@ -1,2 +1,3 @@
-nyc, new york, new york city => nyc
+ny => nyc
 red => magenta
+new york => _ ny
