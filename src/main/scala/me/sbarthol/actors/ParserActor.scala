@@ -24,7 +24,6 @@ import scala.util.control.Breaks.{break, breakable}
 
 class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
 
-  private val minimumElementTextLength = 10
   private val maximumTextLength = 500000
 
   override def receive: Receive = { case Body(link, html, schedulerActor) =>
@@ -50,12 +49,24 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
   private def getTitle(html: String): String = {
 
     val doc = Jsoup.parse(html)
-    val h1 = doc.select("h1")
-    val title = doc.title()
 
-    if (!h1.isEmpty) h1.get(0).text()
-    else if (title.nonEmpty) title
-    else "No Title Found"
+    def getHeader(header: String): String = {
+      doc.select(header) match {
+        case elements if !elements.isEmpty => elements.get(0).text()
+        case _                               => ""
+      }
+    }
+
+    val titles = List(doc.title(), getHeader("h1"), getHeader("h2"), getHeader("h3"))
+
+    titles.foldLeft(z = "") {
+      case (pref, t) if t.nonEmpty && pref.nonEmpty => pref + " " + t
+      case (_, t) if t.nonEmpty                     => t
+      case (pref, _)                                => pref
+    } match {
+      case t if t.isEmpty => "No Title Found"
+      case t              => t
+    }
   }
 
   private def getText(html: String): String = {
@@ -64,11 +75,10 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
 
       Jsoup
         .parse(html)
-        .getAllElements
+        .select("p, h1, h2, h3, pre, blockquote")
         .textNodes()
         .asScala
         .map(_.text)
-        .filter(_.length >= minimumElementTextLength)
         .mkString(" ")
         .take(maximumTextLength)
 
@@ -135,7 +145,7 @@ object ParserActor {
       .addTokenFilter(LowerCaseFilterFactory.NAME)
       .addTokenFilter(StopFilterFactory.NAME)
       .addTokenFilter(PorterStemFilterFactory.NAME)
-      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms.txt")
+      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
       .build()
 
   private lazy val synonymAnalyser =
@@ -144,7 +154,7 @@ object ParserActor {
       .withTokenizer(StandardTokenizerFactory.NAME)
       .addTokenFilter(LowerCaseFilterFactory.NAME)
       .addTokenFilter(PorterStemFilterFactory.NAME)
-      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms.txt")
+      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
       .build()
 
   private def tokenize(text: String, analyzer: Analyzer): List[String] = {
