@@ -185,7 +185,7 @@ object ParserActor {
 
   def highlight(text: String, keywords: List[String]): String = {
 
-    val numberWrappingWords = 3
+    val numberWrappingWords = 4
     val maxTextLength = 2000
     val sb = new StringBuilder()
     val keywordSet = HashSet[String]() ++ keywords

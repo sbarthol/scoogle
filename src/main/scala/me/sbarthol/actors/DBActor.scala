@@ -70,7 +70,10 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
           Item(
             link = link.replace("file://", ""),
             title = cleanText(title.take(maxTitleLength)),
-            text = cleanText(highlight(text, keywords)),
+            text = cleanText(highlight(text, extractQuotedKeywords(query) match {
+              case k if k.nonEmpty => k
+              case _ => keywords
+            })),
             cleanLink = cleanLink(link).replace("file:", "")
           )
         }
@@ -82,6 +85,16 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
         nResults = totalResults,
         processingTimeMillis = endMoment - startMoment
       )
+  }
+
+  private def extractQuotedKeywords(query: String): List[String] = {
+
+    toKeywords(
+      query
+        .split(" ")
+        .filter(token => token.startsWith("\"") && token.endsWith("\""))
+        .mkString(" ")
+    )
   }
 
   private def computeScore(s: Score): Int = {
