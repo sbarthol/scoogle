@@ -23,7 +23,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
     case Put(words, link, text, title) =>
       val hash = MessageDigest
         .getInstance("SHA-256")
-        .digest(text.getBytes("UTF-8"))
+        .digest((text + title).getBytes("UTF-8"))
         .map("%02x".format(_))
         .mkString
 
