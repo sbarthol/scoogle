@@ -206,7 +206,7 @@ object ParserActor {
 
         if (sb.size >= maxTextLength) break
         if (
-          i + 1 < words.length && synonyms(i).length == 1 && keywordSet.contains(
+          i + 1 < words.length && synonyms(i) == "_" && keywordSet.contains(
             synonyms(i + 1)
           )
         ) {
