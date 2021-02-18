@@ -70,10 +70,15 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
           Item(
             link = link.replace("file://", ""),
             title = cleanText(title.take(maxTitleLength)),
-            text = cleanText(highlight(text, extractQuotedKeywords(query) match {
-              case k if k.nonEmpty => k
-              case _ => keywords
-            })),
+            text = cleanText(
+              highlight(
+                text,
+                extractQuotedKeywords(query) match {
+                  case k if k.nonEmpty => k
+                  case _               => keywords
+                }
+              )
+            ),
             cleanLink = cleanLink(link).replace("file:", "")
           )
         }
