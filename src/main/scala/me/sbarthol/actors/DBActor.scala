@@ -13,7 +13,6 @@ import scala.util.{Failure, Success, Try}
 class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
 
   private val maxLinksPerPage = 10
-  private val maxTitleLength = 80
   private val maxItems = 99 * maxLinksPerPage
 
   private var cache: Option[CacheItem] = None
@@ -69,7 +68,7 @@ class DBActor(hbaseConn: HBaseConnection) extends Actor with ActorLogging {
 
           Item(
             link = link.replace("file://", ""),
-            title = cleanText(title.take(maxTitleLength)),
+            title = cleanText(title),
             text = cleanText(
               highlight(
                 text,
