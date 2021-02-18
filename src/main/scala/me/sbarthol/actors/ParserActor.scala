@@ -53,16 +53,17 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
     def getHeader(header: String): String = {
       doc.select(header) match {
         case elements if !elements.isEmpty => elements.get(0).text()
-        case _                               => ""
+        case _                             => ""
       }
     }
 
     val titles = List(doc.title(), getHeader("h1"), getHeader("h2"), getHeader("h3"))
+      .filterNot(_.isEmpty)
+      .distinct
 
     titles.foldLeft(z = "") {
       case (pref, t) if t.nonEmpty && pref.nonEmpty => pref + " " + t
       case (_, t) if t.nonEmpty                     => t
-      case (pref, _)                                => pref
     } match {
       case t if t.isEmpty => "No Title Found"
       case t              => t
@@ -76,14 +77,14 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
       Jsoup
         .parse(html)
         .select("p, h1, h2, h3, pre, blockquote")
-        .textNodes()
-        .asScala
-        .map(_.text)
-        .mkString(" ")
+        .text
         .take(maximumTextLength)
 
     } catch {
-      case _: Exception => ""
+
+      case e: Exception =>
+        log.error(s"Could not parse text: ${e.getMessage}")
+        ""
     }
   }
 
