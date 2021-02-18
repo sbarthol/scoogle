@@ -15,6 +15,7 @@ import org.apache.lucene.analysis.standard.{StandardAnalyzer, StandardTokenizerF
 import org.apache.lucene.analysis.synonym.SynonymGraphFilterFactory
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 
 import java.net.URL
 import scala.collection.immutable.HashSet
@@ -57,9 +58,10 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
       }
     }
 
-    val titles = List(doc.title(), getHeader("h1"), getHeader("h2"), getHeader("h3"))
-      .filterNot(_.isEmpty)
-      .distinct
+    val titles =
+      List(doc.title(), getHeader("h1"), getHeader("h2"), getHeader("h3"))
+        .filterNot(_.isEmpty)
+        .distinct
 
     titles.foldLeft(z = "") {
       case (pref, t) if t.nonEmpty && pref.nonEmpty => pref + " " + t
@@ -74,16 +76,38 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
 
     try {
 
-      Jsoup
-        .parse(html)
-        .select("p, h1, h2, h3, pre, blockquote")
-        .text
-        .take(maximumTextLength)
+      val relevantTags =
+        HashSet[String]() ++ List("p", "h1", "h2", "h3", "pre", "blockquote")
+
+      def dfs(el: Element, insideRelevant: Boolean): String = {
+
+        var currentElementText =
+          if (insideRelevant) el.ownText().strip()
+          else ""
+
+        val it = el.children().iterator()
+        while (it.hasNext) {
+          val child = it.next()
+
+          dfs(
+            child,
+            insideRelevant || relevantTags.contains(child.tagName())
+          ) match {
+            case s if s.nonEmpty && currentElementText.nonEmpty =>
+              currentElementText = currentElementText + " " + s
+            case s if s.nonEmpty => currentElementText = s
+            case _ =>
+          }
+        }
+        currentElementText
+      }
+
+      dfs(el = Jsoup.parse(html).body(), insideRelevant = false).take(maximumTextLength)
 
     } catch {
 
       case e: Exception =>
-        log.error(s"Could not parse text: ${e.getMessage}")
+        log.error(s"Could not parse text: ${e.toString}")
         ""
     }
   }
