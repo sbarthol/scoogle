@@ -5,13 +5,13 @@ a server serving a backend API and a frontend written in React. The HBase master
 started first, either locally or remotely, either on the local filesystem or on HDFS. The address and port number of the
 ZooKeeper Quorum server are given to the Scoogle web crawler and server.
 
-![demo](https://drive.google.com/uc?id=1eOKPdRUDRmxP7IAog-ZXgY0aY-OsEtcl)
+![demo](footage/demo.gif)
 
 ## Web Crawler based on *Akka Actors*
 
 ### Architecture
 
-![architecture](https://drive.google.com/uc?id=1Sk7DkShAJsObgDnq5kqD9SJX9m1RFzKt)
+![architecture](footage/architecture.svg)
 
 ### Seed
 
@@ -46,7 +46,7 @@ the HBase connection can close gracefully and flush buffered data.
 The web crawler exposes [Kamon](https://kamon.io) metrics in a [Prometheus](https://prometheus.io) format on a scraping
 endpoint on ` http://localhost:9095`. A Prometheus server can be started in order to view the various Akka metrics.
 
-![prometheus](https://drive.google.com/uc?id=1PFvHFVYTiBU629cWccnwKlS08UEW6Blr)
+![prometheus](footage/prometheus.png)
 
 ### Benchmark
 
