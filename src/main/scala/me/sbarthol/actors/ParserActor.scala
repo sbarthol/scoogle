@@ -11,7 +11,6 @@ import org.apache.lucene.analysis.core.{
 import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.analysis.en.PorterStemFilterFactory
 import org.apache.lucene.analysis.miscellaneous.LengthFilterFactory
-import org.apache.lucene.analysis.standard.{StandardAnalyzer, StandardTokenizerFactory}
 import org.apache.lucene.analysis.synonym.SynonymGraphFilterFactory
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.jsoup.Jsoup
@@ -96,7 +95,7 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
             case s if s.nonEmpty && currentElementText.nonEmpty =>
               currentElementText = currentElementText + " " + s
             case s if s.nonEmpty => currentElementText = s
-            case _ =>
+            case _               =>
           }
         }
         currentElementText
@@ -176,10 +175,16 @@ object ParserActor {
   private lazy val synonymAnalyser =
     CustomAnalyzer
       .builder()
-      .withTokenizer(StandardTokenizerFactory.NAME)
+      .withTokenizer(LetterTokenizerFactory.NAME)
       .addTokenFilter(LowerCaseFilterFactory.NAME)
       .addTokenFilter(PorterStemFilterFactory.NAME)
       .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
+      .build()
+
+  private lazy val wordsAnalyser =
+    CustomAnalyzer
+      .builder()
+      .withTokenizer(LetterTokenizerFactory.NAME)
       .build()
 
   private def tokenize(text: String, analyzer: Analyzer): List[String] = {
@@ -201,7 +206,7 @@ object ParserActor {
   }
 
   private def toWords(text: String): List[String] = {
-    tokenize(text, new StandardAnalyzer)
+    tokenize(text, wordsAnalyser)
   }
 
   private def toSynonyms(text: String): List[String] = {
