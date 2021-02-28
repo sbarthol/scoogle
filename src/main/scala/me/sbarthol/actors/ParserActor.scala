@@ -169,7 +169,7 @@ object ParserActor {
       .addTokenFilter(LowerCaseFilterFactory.NAME)
       .addTokenFilter(StopFilterFactory.NAME)
       .addTokenFilter(PorterStemFilterFactory.NAME)
-      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
+      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms.txt")
       .build()
 
   private lazy val synonymAnalyser =
@@ -178,7 +178,7 @@ object ParserActor {
       .withTokenizer(LetterTokenizerFactory.NAME)
       .addTokenFilter(LowerCaseFilterFactory.NAME)
       .addTokenFilter(PorterStemFilterFactory.NAME)
-      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms2.txt")
+      .addTokenFilter(SynonymGraphFilterFactory.NAME, "synonyms", "synonyms.txt")
       .build()
 
   private lazy val wordsAnalyser =

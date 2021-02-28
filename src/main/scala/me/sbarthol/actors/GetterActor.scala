@@ -53,7 +53,7 @@ class GetterActor(client: AsyncHttpClient, maxConcurrentConnections: Int) extend
 
       if (protocol == "file") {
 
-        val source = Source.fromFile(link.replace("file://", ""), "UTF-8")
+        val source = Source.fromFile("./local/" + link.replace("file://", ""), "UTF-8")
         val content = source.mkString
         source.close
 
