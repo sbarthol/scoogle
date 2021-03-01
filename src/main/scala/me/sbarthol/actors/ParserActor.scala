@@ -78,30 +78,37 @@ class ParserActor(dbActorManager: ActorRef) extends Actor with ActorLogging {
       val relevantTags =
         HashSet[String]() ++ List("p", "h1", "h2", "h3", "pre", "blockquote")
 
-      def dfs(el: Element, insideRelevant: Boolean): String = {
+      def dfs(el: Element, insideRelevant: Boolean, depth: Int): String = {
 
-        var currentElementText =
-          if (insideRelevant) el.ownText().strip()
-          else ""
+        if (depth >= 200) {
+          el.text()
+        } else {
 
-        val it = el.children().iterator()
-        while (it.hasNext) {
-          val child = it.next()
+          var currentElementText =
+            if (insideRelevant) el.ownText().strip()
+            else ""
 
-          dfs(
-            child,
-            insideRelevant || relevantTags.contains(child.tagName())
-          ) match {
-            case s if s.nonEmpty && currentElementText.nonEmpty =>
-              currentElementText = currentElementText + " " + s
-            case s if s.nonEmpty => currentElementText = s
-            case _               =>
+          val it = el.children().iterator()
+          while (it.hasNext) {
+            val child = it.next()
+
+            dfs(
+              child,
+              insideRelevant || relevantTags.contains(child.tagName()),
+              depth + 1
+            ) match {
+              case s if s.nonEmpty && currentElementText.nonEmpty =>
+                currentElementText = currentElementText + " " + s
+              case s if s.nonEmpty => currentElementText = s
+              case _               =>
+            }
           }
+          currentElementText
         }
-        currentElementText
       }
 
-      dfs(el = Jsoup.parse(html).body(), insideRelevant = false).take(maximumTextLength)
+      dfs(el = Jsoup.parse(html).body(), insideRelevant = false, depth = 0)
+        .take(maximumTextLength)
 
     } catch {
 
